@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومه المنافذ الصحيه - الدخول</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .app-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .header-brand {
+            background: var(--primary);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo-placeholder {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 18px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .header-brand h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .content-body {
+            padding: 25px;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background-color: #f8fafc;
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            background-size: 20px;
+            padding-left: 35px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary);
+            outline: none;
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-login { background: var(--primary); box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2); }
+        .btn-reg { background: var(--success); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        
+        button:active { transform: scale(0.97); }
+
+        .toggle-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .footer-credits {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .contact-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .hidden { display: none !important; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .app-container { border-radius: 0; min-height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header-brand">
+        <div class="logo-placeholder">
+            <img src="logo.png" alt="Logo" style="width: 80%; border-radius: 5px;">
+        </div>
+        <h1>منظومه المنافذ الصحيه</h1>
+    </div>
+
+    <div class="content-body">
+        <div id="login-box">
+            <h2>تسجيل الدخول</h2>
+            <div class="input-group">
+                <input type="text" id="login-id" placeholder="الرقم القومي " maxlength="14">
+            </div>
+            <div class="input-group">
+                <input type="password" id="login-pass" placeholder="كلمة المرور">
+            </div>
+            <button class="btn-login" onclick="handleLogin()">
+                <i class="material-icons">login</i>  تسجيل دخول
+            </button>
+            <span class="toggle-link" onclick="toggleAuth()">ليس لديك حساب؟ سجل الآن</span>
+        </div>
+
+        <div id="reg-box" class="hidden">
+            <h2>حساب جديد</h2>
+            <input type="text" id="reg-name" placeholder="الاسم الرباعي" style="margin-bottom: 8px;">
+            <input type="text" id="reg-id" placeholder="الرقم القومي (14 رقم)" maxlength="14" style="margin-bottom: 8px;">
+            <input type="tel" id="reg-phone" placeholder="رقم الهاتف (11 رقم)" maxlength="11" style="margin-bottom: 8px;">
+            
+            <select id="reg-role" onchange="handleRoleChange(this.value)" style="margin-bottom: 8px; border: 2px solid var(--secondary);">
+                <option value="user">أخصائي منفذ</option>
+                <option value="moshref">مشرف</option>
+                <option value="manager_users">مدير اداره المستفيدين</option>
+                <option value="manager_branch">مدير فرع</option>
+            </select>
+
+            <input type="email" id="reg-email" class="hidden" placeholder="البريد الإلكتروني (لإرسال التقارير)" style="margin-bottom: 8px;">
+
+            <select id="reg-gov" onchange="handleGovChange(this.value)" style="margin-bottom: 8px;">
+                <option value="">اختر المحافظة</option>
+                <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
+                <option>بورسعيد</option><option>السويس</option><option>الإسماعيلية</option>
+                <option>البحيرة</option><option>دمياط</option><option>الشرقية</option>
+                <option>الغربية</option><option>المنوفية</option><option>الدقهلية</option>
+                <option>الفيوم</option><option>المنيا</option><option>أسيوط</option>
+                <option>سوهاج</option><option>قنا</option><option>أسوان</option>
+                <option>كفر الشيخ</option><option>شمال سيناء</option><option>جنوب سيناء</option>
+                <option>البحر الاحمر</option><option>الوادي الجديد</option><option>الاقصر</option>
+                <option>مطروح</option><option>بني سويف</option><option>القليوبيه</option>
+            </select>
+
+            <div id="moshref-fields" class="hidden" style="margin-bottom: 8px;">
+                <div style="text-align: right; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; color: var(--primary);">
+                    اختر المنشآت التابعة لك:
+                </div>
+                <div id="facilities-checkbox-list" style="max-height: 150px; overflow-y: auto; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; text-align: right;">
+                    <span style="color: #94a3b8; font-size: 0.8rem;">اختر المحافظة أولاً...</span>
+                </div>
+            </div>
+
+            <div id="user-fac-fields">
+                <select id="reg-fac-select" onchange="toggleOtherInput(this.value)" style="margin-bottom: 8px;">
+                    <option value="">اختر المنشأة الرئيسية</option>
+                </select>
+                <input type="text" id="reg-fac-other" class="hidden" placeholder="اكتب اسم المنشأة الجديدة" style="margin-bottom: 8px;">
+            </div>
+
+            <div id="shift-fields">
+                <select id="reg-shift" style="margin-bottom: 8px;">
+                    <option value="">اختر الوردية </option>
+                    <option value="صباحي">صباحي</option>
+                    <option value="مسائي">مسائي</option>
+                </select>
+            </div>
+
+            <input type="password" id="reg-pass" placeholder="كلمة المرور">
+            <button class="btn-reg" onclick="handleRegister()">
+                <i class="material-icons">person_add</i> إنشاء حساب
+            </button>
+            <span class="toggle-link" onclick="toggleAuth()">لديك حساب بالفعل؟ سجل دخول</span>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="footer-credits">
+            <div style="margin-bottom: 8px;">
+                <span>لأي شكاوى أو اقتراحات: </span>
+                <a href="mailto:randa.abdo@uhia.gov.eg" class="contact-link">randa.abdo@uhia.gov.eg</a>
+            </div>
+            <div style="border-top: 1px solid #eee; padding-top: 10px; font-weight: 600;">
+                جميع الحقوق محفوظة &copy; 2026 - الهيئة العامة للتأمين الصحي الشامل UHIA
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDgiNw5Dt6EkiokRjznzGkfZvVuDN0APPk",
+        authDomain: "uhia-attendancesystem.firebaseapp.com",
+        projectId: "uhia-attendancesystem",
+        storageBucket: "uhia-attendancesystem.firebasestorage.app",
+        messagingSenderId: "104444545133",
+        appId: "1:104444545133:web:f40607b93fb90a8f511764"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.toggleAuth = () => {
+        document.getElementById('login-box').classList.toggle('hidden');
+        document.getElementById('reg-box').classList.toggle('hidden');
+        document.getElementById('status').style.display = 'none';
+    };
+
+    window.handleRoleChange = (role) => {
+        const moshrefDiv = document.getElementById('moshref-fields');
+        const userDiv = document.getElementById('user-fac-fields');
+        const emailInput = document.getElementById('reg-email');
+        const shiftDiv = document.getElementById('shift-fields');
+        
+        if (role === 'user') {
+            moshrefDiv.classList.add('hidden');
+            userDiv.classList.remove('hidden');
+            emailInput.classList.add('hidden');
+            shiftDiv.classList.remove('hidden'); // إظهار الوردية للأخصائي
+        } else {
+            moshrefDiv.classList.remove('hidden');
+            userDiv.classList.add('hidden');
+            emailInput.classList.remove('hidden');
+            shiftDiv.classList.add('hidden'); // إخفاء الوردية للمشرف والمدير
+        }
+        
+        const currentGov = document.getElementById('reg-gov').value;
+        if(currentGov) handleGovChange(currentGov);
+    };
+
+    window.handleGovChange = (gov) => {
+        const role = document.getElementById('reg-role').value;
+        if (role === 'user') {
+            filterFacilities(gov);
+        } else {
+            loadFacilitiesForMoshref(gov);
+        }
+    };
+
+    window.filterFacilities = async (gov) => {
+        const facSelect = document.getElementById('reg-fac-select');
+        facSelect.innerHTML = '<option value="">جاري تحميل المنشآت...</option>';
+        if(!gov) return facSelect.innerHTML = '<option value="">اختر المحافظة أولاً</option>';
+        
+        try {
+            const q = query(collection(db, "FacilitiesReference"), where("governorate", "==", gov));
+            const snap = await getDocs(q);
+            facSelect.innerHTML = '<option value="">اختر المنشأة</option>';
+            snap.forEach(doc => { facSelect.add(new Option(doc.data().facilityName, doc.data().facilityName)); });
+            facSelect.add(new Option("-- أخرى (منشأة جديدة) --", "other"));
+        } catch (e) { facSelect.innerHTML = '<option value="other">خطأ - اختر أخرى واكتب الاسم</option>'; }
+    };
+
+    window.loadFacilitiesForMoshref = async (gov) => {
+        const container = document.getElementById('facilities-checkbox-list');
+        container.innerHTML = '<span style="color: var(--secondary);">جاري تحميل المنشآت...</span>';
+        if (!gov) {
+            container.innerHTML = '<span style="color: #94a3b8;">اختر المحافظة أولاً...</span>';
+            return;
+        }
+
+        try {
+            const q = query(collection(db, "FacilitiesReference"), where("governorate", "==", gov));
+            const snap = await getDocs(q);
+            container.innerHTML = "";
+            if (snap.empty) {
+                container.innerHTML = '<span style="color: var(--danger);">لا توجد منشآت لهذه المحافظة</span>';
+                return;
+            }
+            snap.forEach(doc => {
+                const facName = doc.data().facilityName;
+                const div = document.createElement('div');
+                div.style.cssText = "margin-bottom:8px; display:flex; align-items:center; gap:10px;";
+                div.innerHTML = `
+                    <input type="checkbox" name="moshref_facs" value="${facName}" id="fac_${facName}" style="width:18px; height:18px;">
+                    <label for="fac_${facName}" style="font-size:0.9rem; cursor:pointer;">${facName}</label>`;
+                container.appendChild(div);
+            });
+        } catch (e) { container.innerHTML = 'خطأ في التحميل'; }
+    };
+
+    window.toggleOtherInput = (val) => {
+        document.getElementById('reg-fac-other').classList.toggle('hidden', val !== 'other');
+    };
+
+    window.handleRegister = async () => {
+        const id = document.getElementById('reg-id').value.trim();
+        const phone = document.getElementById('reg-phone').value.trim();
+        const name = document.getElementById('reg-name').value.trim();
+        const pass = document.getElementById('reg-pass').value.trim();
+        const gov = document.getElementById('reg-gov').value;
+        const role = document.getElementById('reg-role').value;
+        const email = document.getElementById('reg-email').value.trim();
+        const shift = document.getElementById('reg-shift').value;
+
+        if (id.length !== 14 || phone.length !== 11 || !name || !pass || !gov) {
+            return showStatus("يرجى التأكد من كافة البيانات الأساسية", "var(--danger)");
+        }
+
+        try {
+            showStatus("جاري المعالجة...", "var(--warning)");
+
+            let userData = {
+                fullName: name, 
+                nationalID: id, 
+                phoneNumber: phone,
+                governorate: gov, 
+                password: pass,
+                role: role,
+                createdAt: new Date(),
+            };
+
+            if (role === 'user') {
+                if (!shift) return showStatus("يرجى اختيار الوردية للأخصائي", "var(--danger)");
+                let facSelectValue = document.getElementById('reg-fac-select').value;
+                let facName = facSelectValue === 'other' ? document.getElementById('reg-fac-other').value.trim() : facSelectValue;
+                if (!facName) return showStatus("يرجى اختيار المنشأة", "var(--danger)");
+                
+                userData.facility = facName;
+                userData.shift = shift;
+            } 
+            else {
+                const checkboxes = document.querySelectorAll('input[name="moshref_facs"]:checked');
+                let selectedFacs = Array.from(checkboxes).map(cb => cb.value);
+                if (selectedFacs.length === 0) return showStatus("يرجى اختيار منشأة واحدة على الأقل", "var(--danger)");
+                if (!email) return showStatus("يرجى إدخال البريد الإلكتروني للمشرف", "var(--danger)");
+                
+                userData.assignedFacilities = selectedFacs;
+                userData.email = email;
+                userData.shift = "all"; // افتراضي للمشرفين لمتابعة كل الأوقات
+            }
+
+            await setDoc(doc(db, "UsersRegistry", id), userData);
+            if (role === 'user') {
+                const facName = userData.facility;
+                const facDocID = `${gov}-${facName}`.replace(/\s+/g, '_');
+                const facRef = doc(db, "FacilitiesReference", facDocID);
+                const facSnap = await getDoc(facRef);
+                const newStaff = { name: name, phone: phone, nationalID: id };
+                
+                let facSelectValue = document.getElementById('reg-fac-select').value;
+
+                if (facSnap.exists()) {
+                    // Update existing facility staff list
+                    await updateDoc(facRef, { staffList: arrayUnion(newStaff) });
+                } else if (facSelectValue === 'other') {
+                    // Only create a new facility if "Other" was selected
+                    let lat = 0, lng = 0;
+                    try {
+                        const pos = await new Promise((res, rej) => {
+                            navigator.geolocation.getCurrentPosition(res, rej, { 
+                                enableHighAccuracy: true, 
+                                timeout: 5000 
+                            });
+                        });
+                        lat = pos.coords.latitude;
+                        lng = pos.coords.longitude;
+                    } catch (err) {
+                        console.warn("Location not captured for new facility:", err);
+                    }
+
+                    await setDoc(facRef, { 
+                        facilityName: facName, 
+                        governorate: gov, 
+                        staffList: [newStaff],
+                        lat: lat,
+                        lng: lng,
+                        lastUpdated: new Date(),
+                        flag: true // Created by user
+                    });
+                }
+            }
+
+            showStatus("تم التسجيل بنجاح!", "var(--success)");
+            setTimeout(toggleAuth, 1500);
+        } catch (e) { 
+            showStatus("خطأ: " + e.message, "var(--danger)"); 
+        }
+    };
+
+    window.handleLogin = async () => {
+        const id = document.getElementById('login-id').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        if(!id || !pass) return showStatus("يرجى إدخال البيانات", "var(--danger)");
+
+        try {
+            showStatus("جاري التحقق...", "var(--warning)");
+            const userSnap = await getDoc(doc(db, "UsersRegistry", id));
+            
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                if (userData.password === pass) {
+                    sessionStorage.setItem('userData', JSON.stringify(userData));
+                    if (userData.role === 'admin') window.location.href = "admin.html";
+                    else if (userData.role === 'user') window.location.href = "attendance.html";
+                    else window.location.href = "moshref_dashboard.html";
+                } else {
+                    showStatus("كلمة المرور غير صحيحة", "var(--danger)");
+                }
+            } else {
+                showStatus("الحساب غير موجود", "var(--danger)");
+            }
+        } catch (e) { showStatus("فشل الاتصال", "var(--danger)"); }
+    };
+
+    function showStatus(msg, color) {
+        const s = document.getElementById('status');
+        s.innerText = msg; s.style.display = 'block'; 
+        s.style.color = color; s.style.backgroundColor = color + "15";
+        s.style.border = "1px solid " + color;
+    }
+</script>
+</body>
+</html>

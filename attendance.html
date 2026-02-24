@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومه المنافذ الصحيه</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .app-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header-brand {
+            background: var(--primary);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo-placeholder {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 18px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .header-brand h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .content-body {
+            padding: 25px;
+        }
+
+        .user-welcome {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .shift-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #e0e7ff;
+            color: var(--primary);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+            text-align: right;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .custom-select, .custom-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            background-color: #f8fafc;
+            transition: border-color 0.3s;
+        }
+
+        .custom-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: left 15px center;
+            background-size: 18px;
+            cursor: pointer;
+        }
+
+        .custom-select:focus, .custom-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background-color: #fff;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .main-btn {
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-in { background: var(--success); }
+        .btn-out { background: var(--danger); }
+
+        .camera-box {
+            width: 100%;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid var(--primary);
+        }
+
+        #video { width: 100%; display: block; transform: scaleX(-1); }
+        .capture-overlay { position: absolute; bottom: 15px; left: 0; right: 0; display: flex; justify-content: center; }
+        
+        .capture-btn {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #status-area {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .hidden { display: none !important; }
+        
+        .add-fac-btn {
+            background: var(--warning);
+            color: #000;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header-brand">
+        <div class="logo-placeholder">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZP7dAnsdRJczRl9RZ7IfcQ_sCpiz4xCayow&s" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 14px;">
+        </div>
+        <h1>تسجيل الحضور والانصراف</h1>
+    </div>
+
+    <div class="content-body">
+        <div class="user-welcome">
+            <h2 id="uName">جاري التحميل...</h2>
+            <div id="shift-display" class="shift-badge">جاري حساب الوردية...</div>
+        </div>
+
+        <div class="input-group">
+            <label>المحافظة</label>
+            <select id="edit-gov" class="custom-select"></select>
+        </div>
+
+        <div class="input-group">
+            <label>المنشأة الطبية</label>
+            <select id="edit-fac" class="custom-select"></select>
+            <input type="text" id="new-fac-name" class="custom-input hidden" placeholder="أدخل اسم المنشأة الجديدة" style="margin-top:12px;" oninput="validateInputs()">
+            <button id="add-fac-btn" class="add-fac-btn hidden" onclick="addNewFacility()">+ اعتماد هذه المنشأة في موقعي الحالي</button>
+        </div>
+
+        <div id="cam-section" class="camera-box">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div class="capture-overlay">
+                <button id="snap-btn" class="capture-btn" onclick="takeSnapshot()">
+                    <i class="material-icons">photo_camera</i>
+                    التقط صورة الوجه
+                </button>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <button id="btn-login" class="main-btn btn-in" onclick="handleAttendance('in')" disabled>
+                <i class="material-icons">login</i>
+                توقيع دخول
+            </button>
+            <button id="btn-logout" class="main-btn btn-out" onclick="handleAttendance('out')" disabled>
+                <i class="material-icons">logout</i>
+                توقيع خروج
+            </button>
+        </div>
+
+        <div id="status-area"></div>
+
+        <a href="#" onclick="logout()" style="display:block; text-align:center; margin-top:20px; color:#64748b; text-decoration:none;">
+            <i class="material-icons" style="vertical-align: middle;">exit_to_app</i> تسجيل الخروج
+        </a>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #e2e8f0; text-align: center; font-size: 0.8rem; color: #94a3b8;">
+            <p style="margin: 5px 0;">جميع الحقوق محفوظة &copy; 2026 UHIA System</p>
+            <a href="mailto:randa.abdo@uhia.gov.eg" style="color: var(--secondary); text-decoration: none; font-weight: bold;">randa.abdo@uhia.gov.eg</a>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, collection, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDgiNw5Dt6EkiokRjznzGkfZvVuDN0APPk",
+        authDomain: "uhia-attendancesystem.firebaseapp.com",
+        projectId: "uhia-attendancesystem",
+        storageBucket: "uhia-attendancesystem.firebasestorage.app",
+        messagingSenderId: "104444545133",
+        appId: "1:104444545133:web:f40607b93fb90a8f511764"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let userData = JSON.parse(sessionStorage.getItem('userData'));
+    let capturedImageData = null;
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKAgyqBHQBu48mn29SQ-q2dlxTYLc5l4BUSuyga2X8IZ8boBGajBtzL6LlRdN6CaMB/exec";
+
+    // --- Helpers ---
+    function getDeviceId() {
+        let dId = localStorage.getItem('uhia_device_id');
+        if (!dId) {
+            dId = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            localStorage.setItem('uhia_device_id', dId);
+        }
+        return dId;
+    }
+
+    function calculateShift() {
+        const hour = new Date().getHours();
+        return (hour >= 8 && hour < 16) ? "صباحي" : "مسائي";
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // --- UI Controls ---
+    window.validateInputs = () => {
+        const facValue = document.getElementById('edit-fac').value;
+        const otherName = document.getElementById('new-fac-name').value.trim();
+        const btnIn = document.getElementById('btn-login');
+        const btnOut = document.getElementById('btn-logout');
+
+        let isReady = false;
+        if (capturedImageData) {
+            if (facValue === 'other' && otherName !== "") isReady = true;
+            else if (facValue !== "" && facValue !== 'other') isReady = true;
+        }
+
+        [btnIn, btnOut].forEach(btn => {
+            btn.disabled = !isReady;
+            btn.style.opacity = isReady ? "1" : "0.4";
+            btn.style.cursor = isReady ? "pointer" : "not-allowed";
+        });
+    };
+
+    // --- Camera Logic ---
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            document.getElementById('video').srcObject = stream;
+        } catch (err) { showStatus("يرجى السماح بالوصول للكاميرا", "var(--danger)"); }
+    }
+
+    window.takeSnapshot = () => {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        capturedImageData = canvas.toDataURL('image/jpeg', 0.6);
+        showStatus("تم التقاط الصورة بنجاح ", "var(--success)");
+        window.validateInputs();
+    };
+
+    // --- Registration Logic ---
+    window.addNewFacility = async () => {
+        const gov = document.getElementById('edit-gov').value;
+        const fName = document.getElementById('new-fac-name').value.trim();
+        if (!fName) return showStatus("اكتب اسم المنشأة أولاً", "var(--danger)");
+
+        showStatus("جاري تحديد الموقع بدقة...", "var(--warning)");
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const facID = `${gov}-${fName}`.replace(/\s+/g, '_');
+            try {
+                await setDoc(doc(db, "FacilitiesReference", facID), {
+                    facilityName: fName, governorate: gov, 
+                    lat: pos.coords.latitude, lng: pos.coords.longitude,
+                    addedBy: userData.fullName, timestamp: serverTimestamp()
+                });
+                showStatus("تم اعتماد المنشأة بنجاح", "var(--success)");
+                window.loadFacilities(gov, fName);
+            } catch (e) { showStatus("خطأ: " + e.message, "var(--danger)"); }
+        }, () => showStatus("فشل تحديد الموقع", "var(--danger)"), { enableHighAccuracy: true });
+    };
+
+    // --- Main Attendance Logic ---
+    window.handleAttendance = async (mode) => {
+        const today = new Date().toISOString().split('T')[0];
+        const shift = calculateShift();
+        const deviceId = getDeviceId();
+        const docId = `${today}_${userData.nationalID}_${shift}`;
+
+        showStatus("جاري التحقق من الموقع (GPS)...", "var(--warning)");
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                const uLat = pos.coords.latitude;
+                const uLng = pos.coords.longitude;
+                let fName = document.getElementById('edit-fac').value;
+                if (fName === 'other') fName = document.getElementById('new-fac-name').value.trim();
+
+                const facID = `${document.getElementById('edit-gov').value}-${fName}`.replace(/\s+/g, '_');
+                const facSnap = await getDoc(doc(db, "FacilitiesReference", facID));
+                
+                if (facSnap.exists()) {
+                    const dist = calculateDistance(uLat, uLng, facSnap.data().lat, facSnap.data().lng);
+                    if (dist > 0.5) return showStatus(`بعيد عن الموقع (${(dist * 1000).toFixed(0)} متر).`, "var(--danger)");
+                }
+
+                const qDev = query(collection(db, "DailyDeviceLogs"), where("date", "==", today), where("deviceId", "==", deviceId));
+                const devSnap = await getDocs(qDev);
+                if (!devSnap.empty && devSnap.docs[0].data().nationalID !== userData.nationalID) {
+                    return showStatus("هذا الجهاز مستخدم لموظف آخر اليوم!", "var(--danger)");
+                }
+
+                showStatus("جاري الرفع...", "var(--warning)");
+
+                let photoUrl = "";
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ image: capturedImageData, filename: `${mode}_${userData.nationalID}_${Date.now()}.jpg` })
+                    });
+                    const resData = await response.json();
+                    photoUrl = resData.url;
+                } catch (e) { console.log("Drive Error:", e); }
+
+                const recordRef = doc(db, "AttendanceLogs", docId);
+                const recordSnap = await getDoc(recordRef);
+
+                if (mode === 'in') {
+                    if (recordSnap.exists()) return showStatus("لديك سجل دخول بالفعل!", "var(--danger)");
+                    await setDoc(recordRef, {
+                        fullName: userData.fullName, nationalID: userData.nationalID
+        ,governorate: document.getElementById('edit-gov').value,
+                        date: today, shift: shift, loginTime: serverTimestamp(),
+                        loginLoc: { lat: uLat, lng: uLng }, facility: fName,
+                        deviceId: deviceId, loginPhoto: photoUrl, status: "نشط"
+                    });
+                    await setDoc(doc(db, "DailyDeviceLogs", `${today}_${deviceId}`), { date: today, deviceId: deviceId, nationalID: userData.nationalID ,governorate: document.getElementById('edit-gov').value});
+                    showStatus("تم تسجيل الدخول بنجاح", "var(--success)");
+                } else {
+                    if (!recordSnap.exists()) return showStatus("لا يوجد سجل دخول!", "var(--danger)");
+                    if (recordSnap.data().logoutTime) return showStatus("سجلت خروجك سابقاً!", "var(--danger)");
+
+                    const diffMin = Math.floor((new Date() - recordSnap.data().loginTime.toDate()) / 60000);
+                    const duration = `${Math.floor(diffMin/60)} س و ${diffMin%60} د`;
+
+                    await updateDoc(recordRef, {
+                        logoutTime: serverTimestamp(), logoutLoc: { lat: uLat, lng: uLng },
+                        workDuration: duration, logoutPhoto: photoUrl, status: "مكتمل"
+                    });
+                    showStatus(`تم تسجيل الخروج. المدة: ${duration}`, "var(--success)");
+                }
+            } catch (err) { showStatus("خطأ: " + err.message, "var(--danger)"); }
+        }, () => showStatus("فشل الوصول للموقع", "var(--danger)"), { enableHighAccuracy: true });
+    };
+
+    // --- Init ---
+    window.onload = async () => {
+        if (!userData) { location.href = "index.html"; return; }
+        if (userData.role === 'admin') { location.href = "admin.html"; return; }
+
+        document.getElementById('uName').innerText = "مرحباً، " + userData.fullName;
+        document.getElementById('shift-display').innerText = "الوردية: " + calculateShift();
+
+        const govs = ["القاهرة", "الجيزة", "الإسكندرية", "بورسعيد", "السويس", "الإسماعيلية", "أسيوط", "سوهاج", "قنا", "الأقصر", "أسوان","البحيرة","الشرقية","الغربية","المنوفية","الدقهلية","الفيوم","المنيا","كفر الشيخ","شمال سيناء","جنوب سيناء","البحر الاحمر","الوادي الجديد","مطروح","بني سويف","القليوبيه","دمياط"];
+        const gSelect = document.getElementById('edit-gov');
+        govs.forEach(g => gSelect.add(new Option(g, g)));
+        
+        gSelect.value = userData.governorate || "القاهرة";
+
+        window.loadFacilities(gSelect.value, userData.facility);
+        startCamera();
+        
+        gSelect.addEventListener('change', (e) => window.loadFacilities(e.target.value));
+        document.getElementById('edit-fac').addEventListener('change', (e) => window.toggleOtherFac(e.target.value));
+    };
+
+    window.loadFacilities = async (gov, defaultFac = "") => {
+        const fSelect = document.getElementById('edit-fac');
+        fSelect.innerHTML = '<option value="">جاري تحميل المنشآت...</option>';
+        
+        const q = query(collection(db, "FacilitiesReference"), where("governorate", "==", gov));
+        const snap = await getDocs(q);
+        
+        fSelect.innerHTML = '<option value="">اختر المنشأة</option>';
+        snap.forEach(d => fSelect.add(new Option(d.data().facilityName, d.data().facilityName)));
+        fSelect.add(new Option("-- منشأة غير مدرجة --", "other"));
+        
+        if (defaultFac) fSelect.value = defaultFac;
+        window.validateInputs();
+    };
+
+    window.toggleOtherFac = (val) => {
+        const isOther = val === 'other';
+        document.getElementById('new-fac-name').classList.toggle('hidden', !isOther);
+        document.getElementById('add-fac-btn').classList.toggle('hidden', !isOther);
+        window.validateInputs();
+    };
+
+    function showStatus(m, c) {
+        const s = document.getElementById('status-area');
+        s.style.display = 'block'; s.innerText = m; s.style.color = c;
+        s.style.backgroundColor = c + "1A"; s.style.border = "1px solid " + c;
+    }
+
+    window.logout = () => { sessionStorage.clear(); location.href = "index.html"; };
+</script>
+</body>
+</html>
