@@ -203,7 +203,7 @@
 <div class="app-container">
     <div class="header-brand">
         <div class="logo-placeholder">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZP7dAnsdRJczRl9RZ7IfcQ_sCpiz4xCayow&s" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 14px;">
+            <img src="logo.png" alt="Logo" style="width: 80%; border-radius: 5px;">
         </div>
         <h1>تسجيل الحضور والانصراف</h1>
     </div>
@@ -278,7 +278,6 @@
     const db = getFirestore(app);
     let userData = JSON.parse(sessionStorage.getItem('userData'));
     let capturedImageData = null;
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKAgyqBHQBu48mn29SQ-q2dlxTYLc5l4BUSuyga2X8IZ8boBGajBtzL6LlRdN6CaMB/exec";
 
     // --- Helpers ---
     function getDeviceId() {
@@ -334,10 +333,19 @@
     window.takeSnapshot = () => {
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        // Capture dimensions, fallback to 640x480 if video isn't loaded
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        
+        // Mirror the canvas to match video preview
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
         capturedImageData = canvas.toDataURL('image/jpeg', 0.6);
+        
         showStatus("تم التقاط الصورة بنجاح ", "var(--success)");
         window.validateInputs();
     };
@@ -384,40 +392,35 @@
                 
                 if (facSnap.exists()) {
                     const dist = calculateDistance(uLat, uLng, facSnap.data().lat, facSnap.data().lng);
-                    if (dist > 0.5) return showStatus(`بعيد عن الموقع (${(dist * 1000).toFixed(0)} متر).`, "var(--danger)");
+                    if (dist > 0.5) return showStatus(`بعيد عن الموقع (${(dist * 1000).toFixed(0)} متر). النطاق المسموح 500 متر.`, "var(--danger)");
                 }
 
-                const qDev = query(collection(db, "DailyDeviceLogs"), where("date", "==", today), where("deviceId", "==", deviceId));
-                const devSnap = await getDocs(qDev);
-                if (!devSnap.empty && devSnap.docs[0].data().nationalID !== userData.nationalID) {
-                    return showStatus("هذا الجهاز مستخدم لموظف آخر اليوم!", "var(--danger)");
-                }
+                showStatus("جاري حفظ البيانات...", "var(--warning)");
 
-                showStatus("جاري الرفع...", "var(--warning)");
-
-                let photoUrl = "";
-                try {
-                    const response = await fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ image: capturedImageData, filename: `${mode}_${userData.nationalID}_${Date.now()}.jpg` })
-                    });
-                    const resData = await response.json();
-                    photoUrl = resData.url;
-                } catch (e) { console.log("Drive Error:", e); }
+                // Store Base64 directly in Firestore (avoids CORS and storage limit issues for small JPEGs)
+                const finalPhotoData = capturedImageData || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
                 const recordRef = doc(db, "AttendanceLogs", docId);
                 const recordSnap = await getDoc(recordRef);
 
                 if (mode === 'in') {
                     if (recordSnap.exists()) return showStatus("لديك سجل دخول بالفعل!", "var(--danger)");
-                    await setDoc(recordRef, {
-                        fullName: userData.fullName, nationalID: userData.nationalID
-        ,governorate: document.getElementById('edit-gov').value,
-                        date: today, shift: shift, loginTime: serverTimestamp(),
-                        loginLoc: { lat: uLat, lng: uLng }, facility: fName,
-                        deviceId: deviceId, loginPhoto: photoUrl, status: "نشط"
-                    });
-                    await setDoc(doc(db, "DailyDeviceLogs", `${today}_${deviceId}`), { date: today, deviceId: deviceId, nationalID: userData.nationalID ,governorate: document.getElementById('edit-gov').value});
+                    
+                    const recordData = {
+                        fullName: userData.fullName, 
+                        nationalID: userData.nationalID,
+                        governorate: document.getElementById('edit-gov').value,
+                        date: today, 
+                        shift: shift, 
+                        loginTime: serverTimestamp(),
+                        loginLoc: { lat: uLat, lng: uLng }, 
+                        facility: fName,
+                        deviceId: deviceId, 
+                        loginPhoto: finalPhotoData, 
+                        status: "نشط"
+                    };
+                    
+                    await setDoc(recordRef, recordData);
                     showStatus("تم تسجيل الدخول بنجاح", "var(--success)");
                 } else {
                     if (!recordSnap.exists()) return showStatus("لا يوجد سجل دخول!", "var(--danger)");
@@ -426,10 +429,15 @@
                     const diffMin = Math.floor((new Date() - recordSnap.data().loginTime.toDate()) / 60000);
                     const duration = `${Math.floor(diffMin/60)} س و ${diffMin%60} د`;
 
-                    await updateDoc(recordRef, {
-                        logoutTime: serverTimestamp(), logoutLoc: { lat: uLat, lng: uLng },
-                        workDuration: duration, logoutPhoto: photoUrl, status: "مكتمل"
-                    });
+                    const updateData = {
+                        logoutTime: serverTimestamp(), 
+                        logoutLoc: { lat: uLat, lng: uLng },
+                        workDuration: duration, 
+                        logoutPhoto: finalPhotoData, 
+                        status: "مكتمل"
+                    };
+
+                    await updateDoc(recordRef, updateData);
                     showStatus(`تم تسجيل الخروج. المدة: ${duration}`, "var(--success)");
                 }
             } catch (err) { showStatus("خطأ: " + err.message, "var(--danger)"); }
@@ -440,6 +448,10 @@
     window.onload = async () => {
         if (!userData) { location.href = "index.html"; return; }
         if (userData.role === 'admin') { location.href = "admin.html"; return; }
+
+        if (window.location.protocol === 'file:') {
+            alert("تنبيه: أنت تقوم بفتح الملف مباشرة. قد لا يعمل رفع الصور إلى Google Drive بشكل صحيح بسبب قيود المتصفح (CORS). يفضل تشغيل المشروع باستخدام سيرفر محلي (مثل Live Server).");
+        }
 
         document.getElementById('uName').innerText = "مرحباً، " + userData.fullName;
         document.getElementById('shift-display').innerText = "الوردية: " + calculateShift();

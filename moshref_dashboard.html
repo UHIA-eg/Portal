@@ -6,8 +6,10 @@
     <title>UHIA - نظام الرقابة الشامل المطور</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --admin-bg: #f8fafc; --primary: #1e3a8a; --white: #ffffff; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #3b82f6; }
         body { font-family: 'Cairo', sans-serif; background-color: var(--admin-bg); margin: 0; display: flex; }
@@ -78,14 +80,21 @@
     <div id="btn-overview" class="nav-item active" onclick="showSec('overview')"><i class="material-icons">dashboard</i> لوحة التحكم اليومية</div>
     <div id="btn-timeseries" class="nav-item" onclick="showSec('timeseries')"><i class="material-icons">timeline</i> تحليل السلاسل الزمنية</div>
     <div id="btn-attendance" class="nav-item" onclick="showSec('attendance')"><i class="material-icons">history</i> سجل المنشآت التفصيلي</div>
+    <div id="btn-map" class="nav-item" onclick="showSec('map-view')"><i class="material-icons">map</i> الخريطة التفاعلية</div>
     <div id="btn-staff" class="nav-item" onclick="showSec('staff')"><i class="material-icons">people</i> طاقم العمل</div>
     <div class="nav-item" style="margin-top: auto; color: #fda4af;" onclick="logout()"><i class="material-icons">logout</i> خروج</div>
 </div>
 
 <div class="main-content">
-    <div id="global-shift-container" class="shift-container">
-        <button id="shift-morning" class="btn-shift active" onclick="changeShift('صباحي')">الوردية الصباحية</button>
-        <button id="shift-night" class="btn-shift" onclick="changeShift('مسائي')">الوردية المسائية</button>
+    <div class="date-picker-bar" style="justify-content: center; margin-bottom: 15px;">
+        <div class="date-input-group">
+            <i class="material-icons" style="font-size: 1.2rem; color: #64748b;">calendar_today</i>
+            <span>التاريخ:</span> <input type="date" id="global-date" onchange="processData()">
+        </div>
+        <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
+            <button id="shift-morning" class="btn-shift active" onclick="changeShift('صباحي')">الوردية الصباحية</button>
+            <button id="shift-night" class="btn-shift" onclick="changeShift('مسائي')">الوردية المسائية</button>
+        </div>
     </div>
 
     <div id="sec-overview" class="section-view active">
@@ -135,6 +144,19 @@
         </div>
     </div>
 
+    <div id="sec-map-view" class="section-view">
+        <div class="data-container">
+            <div class="table-header">
+                <h3>الخريطة التفاعلية للمنشآت التابعة لك</h3>
+            </div>
+            <div style="display: flex; gap: 20px; margin-bottom: 15px; font-size: 0.85rem; font-weight: bold;">
+                <div style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; background:green; border-radius:50%; display:inline-block;"></span> متاح (يوجد حضور حالياً)</div>
+                <div style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; background:red; border-radius:50%; display:inline-block;"></span> غير متاح (لا يوجد حضور)</div>
+            </div>
+            <div id="moshref-map" style="height: 500px; width: 100%; border-radius: 15px; z-index: 1; border: 2px solid #e2e8f0;"></div>
+        </div>
+    </div>
+
     <div id="sec-staff" class="section-view">
         <div class="data-container">
             <div class="table-header"><h3>قاعدة بيانات الموظفين المسجلين</h3></div>
@@ -171,6 +193,16 @@
     </div>
 </div>
 
+<div id="image-modal" class="modal" style="max-width: 600px; display: none; position: fixed; z-index: 2001; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);">
+    <div class="modal-content" style="background: white; margin: 10% auto; padding: 20px; border-radius: 15px; text-align: center;">
+        <h3><i class="material-icons">image</i> صورة التحقق</h3>
+        <div style="background: #000; padding: 10px; border-radius: 10px; margin-bottom: 15px;">
+            <img id="modal-img-display" src="" style="max-width: 100%; border-radius: 5px;">
+        </div>
+        <button class="btn-action" style="width:100%;" onclick="closeImageModal()">إغلاق</button>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -188,23 +220,40 @@
     const db = getFirestore(app);
     const userData = JSON.parse(sessionStorage.getItem('userData'));
     const myFacs = userData?.assignedFacilities || [];
+    const myGov = userData?.governorate;
     let currentShift = 'صباحي';
     let globalUsers = [];
     let globalLogs = [];
     let facilityRefData = []; 
     let myChart = null;
+    let moshrefMap;
+    let markersLayer = L.layerGroup();
+
+    function createCustomIcon(color) {
+        return new L.Icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+    }
 
     window.onload = async () => {
         if (!userData) { window.location.href = "index.html"; return; }
         document.getElementById('moshref-name').innerText = userData.fullName;
         
         const today = new Date().toISOString().split('T')[0];
+        document.getElementById('global-date').value = today;
         const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         document.getElementById('date-from').value = lastWeek;
         document.getElementById('date-to').value = today;
 
+        initMap();
+
         const facSnap = await getDocs(collection(db, "FacilitiesReference"));
-        facilityRefData = facSnap.docs.map(d => d.data());
+        facilityRefData = facSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         const govSel = document.getElementById('edit-gov');
         const uniqueGovs = [...new Set(facilityRefData.map(f => f.governorate))].sort();
@@ -213,11 +262,34 @@
         await fetchData();
     };
 
+    function initMap() {
+        if(moshrefMap) return;
+        moshrefMap = L.map('moshref-map').setView([26.8206, 30.8025], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(moshrefMap);
+        markersLayer.addTo(moshrefMap);
+    }
+
+    function renderMoshrefMapMarkers(shiftLogs) {
+        markersLayer.clearLayers();
+        
+        facilityRefData.filter(f => myFacs.includes(f.facilityName) && f.governorate === myGov).forEach(f => {
+            if(f.lat && f.lng) {
+                const hasLogin = shiftLogs.some(log => log.facility === f.facilityName && log.governorate === f.governorate);
+                const markerColor = hasLogin ? 'green' : 'red';
+                const statusText = hasLogin ? '<span style="color:green">متاح (حضور نشط)</span>' : '<span style="color:red">غير متاح (لا يوجد حضور)</span>';
+
+                L.marker([f.lat, f.lng], { icon: createCustomIcon(markerColor) })
+                    .bindPopup(`<b>${f.facilityName}</b><br>${f.governorate}<br>${statusText}`)
+                    .addTo(markersLayer);
+            }
+        });
+    }
+
     async function fetchData() {
         const uSnap = await getDocs(collection(db, "UsersRegistry"));
         globalUsers = uSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         const lSnap = await getDocs(collection(db, "AttendanceLogs"));
-        globalLogs = lSnap.docs.map(d => d.data());
+        globalLogs = lSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         processData();
     }
 
@@ -225,16 +297,18 @@
         currentShift = shift;
         document.getElementById('shift-morning').classList.toggle('active', shift === 'صباحي');
         document.getElementById('shift-night').classList.toggle('active', shift === 'مسائي');
-        document.getElementById('current-shift-label').innerText = "عرض بيانات الوردية الـ" + shift;
+        const label = document.getElementById('current-shift-label');
+        if(label) label.innerText = "عرض بيانات الوردية الـ" + shift;
         processData();
     };
 
     function processData() {
-        const todayStr = new Date().toDateString();
-        const todayLogs = globalLogs.filter(l => l.loginTime?.toDate().toDateString() === todayStr);
-        const shiftWorkforce = globalUsers.filter(u => myFacs.includes(u.facility) && u.shift === currentShift && u.role !== 'moshref');
+        const selectedDateStr = new Date(document.getElementById('global-date').value).toDateString();
+        const filteredLogs = globalLogs.filter(l => l.loginTime?.toDate().toDateString() === selectedDateStr);
+        
+        const shiftWorkforce = globalUsers.filter(u => myFacs.includes(u.facility) && u.governorate === myGov && u.shift === currentShift && u.role !== 'moshref');
         const shiftStaffIDs = shiftWorkforce.map(u => u.nationalID);
-        const shiftLogs = todayLogs.filter(l => myFacs.includes(l.facility) && l.shift === currentShift);
+        const shiftLogs = filteredLogs.filter(l => myFacs.includes(l.facility) && l.governorate === myGov && l.shift === currentShift);
 
         const activeUsers = shiftLogs.filter(l => shiftStaffIDs.includes(l.nationalID) && !l.logoutTime);
         const logoutUsers = shiftLogs.filter(l => shiftStaffIDs.includes(l.nationalID) && l.logoutTime);
@@ -246,6 +320,7 @@
         renderFacilityDetails(shiftWorkforce, shiftLogs);
         renderStaffTab();
         updateChart(shiftWorkforce, shiftLogs);
+        renderMoshrefMapMarkers(shiftLogs);
     }
 
     function renderCards(total, uActive, uOut, gActive, gOut) {
@@ -283,7 +358,21 @@
                 const log = facLogs.find(l => l.nationalID === u.nationalID);
                 let statusTag = !log ? '<span class="tag tag-absent">غائب</span>' : (log.logoutTime ? '<span class="tag tag-out">انصرف</span>' : '<span class="tag tag-present">حاضر الآن</span>');
                 html += `<tr><td>${u.fullName}</td><td>${u.nationalID}</td><td>${u.phoneNumber || '-'}</td><td>${u.facility}</td>
-                    <td>${statusTag}</td><td>${log?.loginTime?.toDate().toLocaleTimeString('ar-EG') || '-'}</td><td>${log?.logoutTime?.toDate().toLocaleTimeString('ar-EG') || '-'}</td></tr>`;
+                    <td>${statusTag}</td>
+                    <td>${log?.loginTime?.toDate().toLocaleTimeString('ar-EG') || '-'}
+                        ${log?.loginPhoto ? `<br>
+                        <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${log.loginPhoto}')">
+                            <img src="${log.loginPhoto}" style="width:40px; height:40px; border-radius:5px; border:1px solid #ddd; object-fit:cover;">
+                            <br><small style="color:var(--primary); text-decoration:underline;">تكبير</small>
+                        </div>` : ''}
+                    </td>
+                    <td>${log?.logoutTime?.toDate().toLocaleTimeString('ar-EG') || '-'}
+                        ${log?.logoutPhoto ? `<br>
+                        <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${log.logoutPhoto}')">
+                            <img src="${log.logoutPhoto}" style="width:40px; height:40px; border-radius:5px; border:1px solid #ddd; object-fit:cover;">
+                            <br><small style="color:var(--danger); text-decoration:underline;">تكبير</small>
+                        </div>` : ''}
+                    </td></tr>`;
             });
 
             guestLogs.forEach(g => {
@@ -291,7 +380,21 @@
                 const orig = guestData?.facility || 'منتدب خارجي';
                 const phone = guestData?.phoneNumber || '-';
                 html += `<tr><td>${g.fullName}</td><td>${g.nationalID}</td><td>${phone}</td><td><span class="tag tag-guest">${orig}</span></td>
-                    <td><span class="tag tag-guest">${g.logoutTime ? 'انصرف' : 'حاضر (ضيف)'}</span></td><td>${g.loginTime.toDate().toLocaleTimeString('ar-EG')}</td><td>${g.logoutTime?.toDate().toLocaleTimeString('ar-EG') || '-'}</td></tr>`;
+                    <td><span class="tag tag-guest">${g.logoutTime ? 'انصرف' : 'حاضر (ضيف)'}</span></td>
+                    <td>${g.loginTime.toDate().toLocaleTimeString('ar-EG')}
+                        ${g.loginPhoto ? `<br>
+                        <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${g.loginPhoto}')">
+                            <img src="${g.loginPhoto}" style="width:40px; height:40px; border-radius:5px; border:1px solid #ddd; object-fit:cover;">
+                            <br><small style="color:var(--primary); text-decoration:underline;">تكبير</small>
+                        </div>` : ''}
+                    </td>
+                    <td>${g.logoutTime?.toDate().toLocaleTimeString('ar-EG') || '-'}
+                        ${g.logoutPhoto ? `<br>
+                        <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${g.logoutPhoto}')">
+                            <img src="${g.logoutPhoto}" style="width:40px; height:40px; border-radius:5px; border:1px solid #ddd; object-fit:cover;">
+                            <br><small style="color:var(--danger); text-decoration:underline;">تكبير</small>
+                        </div>` : ''}
+                    </td></tr>`;
             });
             html += `</tbody></table></div>`;
         });
@@ -311,12 +414,12 @@
             let facTotals = { req:0, morn:0, night:0, guest:0, diff:0 };
             for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
                 const dayStr = d.toDateString();
-                const dayLogs = globalLogs.filter(l => l.facility === fac && l.loginTime?.toDate().toDateString() === dayStr);
-                const dayStaff = globalUsers.filter(u => u.facility === fac && u.role !== 'moshref');
+                const dayLogs = globalLogs.filter(l => l.facility === fac && l.governorate === myGov && l.loginTime?.toDate().toDateString() === dayStr);
+                const dayStaff = globalUsers.filter(u => u.facility === fac && u.governorate === myGov && u.role !== 'moshref');
                 const mReq = dayStaff.filter(u => u.shift === 'صباحي').length;
                 const nReq = dayStaff.filter(u => u.shift === 'مسائي').length;
                 const mPres = dayLogs.filter(l => l.shift === 'صباحي' && dayStaff.some(u => u.nationalID === l.nationalID)).length;
-                const nPres = dayLogs.filter(l => l.shift === 'مسائي' && dayStaff.some(u => u.nationalID === u.nationalID)).length;
+                const nPres = dayLogs.filter(l => l.shift === 'مسائي' && dayStaff.some(u => u.nationalID === l.nationalID)).length;
                 const guests = dayLogs.filter(l => !dayStaff.some(u => u.nationalID === l.nationalID)).length;
                 const dailyDiff = (mPres + nPres + guests) - (mReq + nReq);
                 facRows += `<tr><td>${d.toLocaleDateString('ar-EG')}</td><td>${mReq}</td><td>${mPres}</td><td>${nReq}</td><td>${nPres}</td><td>${guests}</td><td style="font-weight:700; color:${dailyDiff<0?'var(--danger)':'var(--success)'}">${dailyDiff}</td></tr>`;
@@ -342,7 +445,7 @@
     };
 
     window.renderStaffTab = () => {
-        const myAllStaff = globalUsers.filter(u => myFacs.includes(u.facility));
+        const myAllStaff = globalUsers.filter(u => myFacs.includes(u.facility) && u.governorate === myGov);
         document.getElementById('staff-list-body').innerHTML = myAllStaff.map(u => `
             <tr>
                 <td>${u.fullName}</td>
@@ -400,6 +503,15 @@
         }
     };
 
+    window.showImageModal = (base64) => {
+        document.getElementById('modal-img-display').src = base64;
+        document.getElementById('image-modal').style.display = 'block';
+    };
+
+    window.closeImageModal = () => {
+        document.getElementById('image-modal').style.display = 'none';
+    };
+
     window.closeModal = () => document.getElementById('editModal').style.display = 'none';
 
     function updateChart(shiftWorkforce, shiftLogs) {
@@ -424,11 +536,17 @@
         document.getElementById(`sec-${id}`).classList.add('active');
         document.getElementById(`btn-${id}`).classList.add('active');
         
+        if (id === 'map-view') {
+            setTimeout(() => {
+                moshrefMap.invalidateSize();
+            }, 200);
+        }
+
         // التعديل هنا: إخفاء التبديل في صفحة التحليل وصفحة طاقم العمل
         if (id === 'timeseries' || id === 'staff') {
-            document.getElementById('global-shift-container').style.display = 'none';
+            document.querySelector('.date-picker-bar').style.display = 'none';
         } else {
-            document.getElementById('global-shift-container').style.display = 'flex';
+            document.querySelector('.date-picker-bar').style.display = 'flex';
         }
     };
 

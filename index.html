@@ -260,6 +260,14 @@
             </div>
 
             <input type="password" id="reg-pass" placeholder="كلمة المرور">
+            
+            <div style="margin: 15px 0; text-align: right; font-size: 0.85rem; color: #475569; display: flex; align-items: flex-start; gap: 8px;">
+                <input type="checkbox" id="reg-terms" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                <label for="reg-terms" style="cursor: pointer; line-height: 1.4;">
+                    أوافق على الشروط والأحكام: (الوصول للموقع الجغرافي، استخدام الكاميرا لالتقاط صورة الوجه، وتسجيل أوقات الحضور والانصراف).
+                </label>
+            </div>
+
             <button class="btn-reg" onclick="handleRegister()">
                 <i class="material-icons">person_add</i> إنشاء حساب
             </button>
@@ -388,9 +396,14 @@
         const role = document.getElementById('reg-role').value;
         const email = document.getElementById('reg-email').value.trim();
         const shift = document.getElementById('reg-shift').value;
+        const termsAccepted = document.getElementById('reg-terms').checked;
 
         if (id.length !== 14 || phone.length !== 11 || !name || !pass || !gov) {
             return showStatus("يرجى التأكد من كافة البيانات الأساسية", "var(--danger)");
+        }
+
+        if (!termsAccepted) {
+            return showStatus("يرجى الموافقة على الشروط والأحكام للمتابعة", "var(--danger)");
         }
 
         try {
@@ -414,45 +427,32 @@
                 
                 userData.facility = facName;
                 userData.shift = shift;
-            } 
-            else {
-                const checkboxes = document.querySelectorAll('input[name="moshref_facs"]:checked');
-                let selectedFacs = Array.from(checkboxes).map(cb => cb.value);
-                if (selectedFacs.length === 0) return showStatus("يرجى اختيار منشأة واحدة على الأقل", "var(--danger)");
-                if (!email) return showStatus("يرجى إدخال البريد الإلكتروني للمشرف", "var(--danger)");
-                
-                userData.assignedFacilities = selectedFacs;
-                userData.email = email;
-                userData.shift = "all"; // افتراضي للمشرفين لمتابعة كل الأوقات
-            }
 
-            await setDoc(doc(db, "UsersRegistry", id), userData);
-            if (role === 'user') {
-                const facName = userData.facility;
+                // --- Facility Location Logic ---
                 const facDocID = `${gov}-${facName}`.replace(/\s+/g, '_');
                 const facRef = doc(db, "FacilitiesReference", facDocID);
                 const facSnap = await getDoc(facRef);
                 const newStaff = { name: name, phone: phone, nationalID: id };
-                
-                let facSelectValue = document.getElementById('reg-fac-select').value;
 
                 if (facSnap.exists()) {
                     // Update existing facility staff list
                     await updateDoc(facRef, { staffList: arrayUnion(newStaff) });
                 } else if (facSelectValue === 'other') {
                     // Only create a new facility if "Other" was selected
-                    let lat = 0, lng = 0;
+                    let lat, lng;
                     try {
+                        showStatus("جاري تحديد الموقع الجغرافي للمنشأة الجديدة...", "var(--warning)");
                         const pos = await new Promise((res, rej) => {
                             navigator.geolocation.getCurrentPosition(res, rej, { 
                                 enableHighAccuracy: true, 
-                                timeout: 5000 
+                                timeout: 10000 
                             });
                         });
                         lat = pos.coords.latitude;
                         lng = pos.coords.longitude;
                     } catch (err) {
-                        console.warn("Location not captured for new facility:", err);
+                        console.error("Location not captured for new facility:", err);
+                        return showStatus("فشل تحديد الموقع الجغرافي. يرجى تفعيل الـ GPS والمحاولة مرة أخرى لتسجيل المنشأة.", "var(--danger)");
                     }
 
                     await setDoc(facRef, { 
@@ -465,8 +465,21 @@
                         flag: true // Created by user
                     });
                 }
+            } 
+            else {
+                const checkboxes = document.querySelectorAll('input[name="moshref_facs"]:checked');
+                let selectedFacs = Array.from(checkboxes).map(cb => cb.value);
+                if (selectedFacs.length === 0) return showStatus("يرجى اختيار منشأة واحدة على الأقل", "var(--danger)");
+                if (!email) return showStatus("يرجى إدخال البريد الإلكتروني للمشرف", "var(--danger)");
+                
+                userData.assignedFacilities = selectedFacs;
+                userData.email = email;
+                userData.shift = "all"; // افتراضي للمشرفين لمتابعة كل الأوقات
             }
 
+            // Create user account only if everything else succeeded
+            await setDoc(doc(db, "UsersRegistry", id), userData);
+            
             showStatus("تم التسجيل بنجاح!", "var(--success)");
             setTimeout(toggleAuth, 1500);
         } catch (e) { 

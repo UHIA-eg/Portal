@@ -272,6 +272,7 @@
     <div class="nav-item active" onclick="navTo('attendance', event)"><i class="material-icons">analytics</i> سجلات الحضور اليومية</div>
     <div class="nav-item" onclick="navTo('users', event)"><i class="material-icons">badge</i> إدارة العاملين بالمنافذ</div>
     <div class="nav-item" onclick="navTo('facilities', event)"><i class="material-icons">location_city</i> إدارة المنافذ الصحيه</div>
+    <div class="nav-item" onclick="navTo('bulk-upload', event)"><i class="material-icons">upload_file</i> رفع ملف منشآت (Excel)</div>
     <div class="nav-item" onclick="navTo('map-view', event)"><i class="material-icons">map</i> الخريطة التفاعلية</div>
     <div class="nav-item" onclick="navTo('flagged', event)">
     <i class="material-icons">fact_check</i> مراجعة طلبات الإضافة
@@ -435,6 +436,41 @@
         </div>
     </div>
 
+    <div id="sec-bulk-upload" class="data-container" style="display:none;">
+        <div class="table-header-tools">
+            <h2>رفع منشآت صحية من ملف Excel</h2>
+        </div>
+        <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px dashed #cbd5e1; text-align: center;">
+            <i class="material-icons" style="font-size: 4rem; color: var(--primary); margin-bottom: 15px;">cloud_upload</i>
+            <p style="font-weight: bold; margin-bottom: 10px;">اختر ملف Excel يحتوي على الأعمدة التالية بالترتيب:</p>
+            <p style="color: #64748b; margin-bottom: 20px;">(المحافظة، اسم المنشأة، خط العرض Lat، خط الطول Long)</p>
+            <input type="file" id="excel-file-input" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+            <button class="btn-add" style="margin: 0 auto; padding: 15px 30px;" onclick="document.getElementById('excel-file-input').click()">
+                <i class="material-icons">attach_file</i> اختيار الملف والرفع
+            </button>
+            <div id="upload-status" style="margin-top: 20px; font-weight: bold;"></div>
+        </div>
+        <div id="excel-preview-container" style="margin-top: 30px; display: none;">
+            <h3>معاينة البيانات (سيتم إضافة هذه البيانات مباشرة)</h3>
+            <div style="overflow-x: auto; max-height: 400px;">
+                <table id="excel-preview-table">
+                    <thead>
+                        <tr>
+                            <th>المحافظة</th>
+                            <th>اسم المنشأة</th>
+                            <th>خط العرض (Lat)</th>
+                            <th>خط الطول (Long)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="excel-preview-body"></tbody>
+                </table>
+            </div>
+            <button id="confirm-upload-btn" class="btn-add" style="width: 100%; margin-top: 20px; background: var(--success);" onclick="processExcelData()">
+                <i class="material-icons">save</i> تأكيد الحفظ في قاعدة البيانات
+            </button>
+        </div>
+    </div>
+
     <div id="sec-facilities" class="data-container" style="display:none;">
         <div class="table-header-tools">
             <h2>إدارة وتوزيع المنشآت</h2>
@@ -496,7 +532,8 @@
                     <th>اسم المنشأة</th>
                     <th>المحافظة</th>
                     <th>الموظف المنشئ</th>
-                    <th>الرقم القومي</th>
+                    <th>هاتف المنشئ</th>
+                    <th>الإحداثيات</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
@@ -547,11 +584,41 @@
     </div>
 </div>
 
+<div id="image-modal" class="modal" style="max-width: 600px;">
+    <h3><i class="material-icons">image</i> صورة التحقق</h3>
+    <div style="text-align: center; background: #000; border-radius: 10px; padding: 10px;">
+        <img id="modal-img-display" src="" style="max-width: 100%; border-radius: 5px;">
+    </div>
+    <button class="btn-add" style="width:100%; margin-top:15px;" onclick="closeModal()">إغلاق</button>
+</div>
+
+<div id="edit-flagged-modal" class="modal">
+    <h3><i class="material-icons">edit</i> مراجعة واعتماد منشأة</h3>
+    <input type="hidden" id="edit-flag-id">
+    <label>اسم المنشأة</label>
+    <input type="text" id="edit-flag-name">
+    <div style="display: flex; gap: 10px; margin-top:10px;">
+        <div style="flex:1">
+            <label>خط العرض Lat</label>
+            <input type="number" id="edit-flag-lat" step="any">
+        </div>
+        <div style="flex:1">
+            <label>خط الطول Lng</label>
+            <input type="number" id="edit-flag-lng" step="any">
+        </div>
+    </div>
+    <p style="font-size: 0.8rem; color: #64748b; margin-top:10px;">* بمجرد الاعتماد، ستظهر هذه المنشأة في القائمة الرسمية لكل الموظفين.</p>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn-add" style="flex:1; background:var(--success)" onclick="approveFlagged()">اعتماد وحفظ</button>
+        <button class="btn-add" style="flex:1; background:var(--danger)" onclick="closeModal()">إلغاء</button>
+    </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, deleteDoc, setDoc, updateDoc, query, orderBy, where, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc, setDoc, updateDoc, query, orderBy, where, Timestamp, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDgiNw5Dt6EkiokRjznzGkfZvVuDN0APPk",
@@ -571,6 +638,93 @@
     let allAttendance = [];
     let allUsers = [];
     let currentShiftAttendance = []; // To track status for map colors
+    let excelData = [];
+
+    window.handleExcelUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const bstr = evt.target.result;
+            const wb = XLSX.read(bstr, { type: 'binary' });
+            const wsname = wb.SheetNames[0];
+            const ws = wb.Sheets[wsname];
+            const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+            if (data.length < 2) {
+                alert("الملف فارغ أو غير صحيح");
+                return;
+            }
+
+            // Assume header is in first row, data from second row
+            // Format: [gov, name, lat, long]
+            excelData = data.slice(1).map(row => ({
+                governorate: row[0],
+                facilityName: row[1],
+                lat: parseFloat(row[2]),
+                lng: parseFloat(row[3])
+            })).filter(row => row.governorate && row.facilityName && !isNaN(row.lat) && !isNaN(row.lng));
+
+            renderExcelPreview();
+        };
+        reader.readAsBinaryString(file);
+    };
+
+    function renderExcelPreview() {
+        const previewBody = document.getElementById('excel-preview-body');
+        previewBody.innerHTML = "";
+        
+        excelData.forEach(row => {
+            previewBody.innerHTML += `<tr>
+                <td>${row.governorate}</td>
+                <td>${row.facilityName}</td>
+                <td>${row.lat}</td>
+                <td>${row.lng}</td>
+            </tr>`;
+        });
+
+        document.getElementById('excel-preview-container').style.display = 'block';
+        document.getElementById('upload-status').innerText = `تم تحميل ${excelData.length} منشأة. راجع البيانات ثم اضغط حفظ.`;
+    }
+
+    window.processExcelData = async () => {
+        const btn = document.getElementById('confirm-upload-btn');
+        btn.disabled = true;
+        btn.innerText = "جاري الحفظ...";
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const row of excelData) {
+            try {
+                const facID = `${row.governorate}-${row.facilityName}`.replace(/\s+/g, '_');
+                await setDoc(doc(db, "FacilitiesReference", facID), {
+                    facilityName: row.facilityName,
+                    governorate: row.governorate,
+                    lat: row.lat,
+                    lng: row.lng,
+                    lastUpdated: serverTimestamp()
+                });
+                successCount++;
+            } catch (err) {
+                console.error("Error adding facility:", err);
+                errorCount++;
+            }
+        }
+
+        document.getElementById('upload-status').innerText = `تم الحفظ بنجاح: ${successCount} | أخطاء: ${errorCount}`;
+        btn.disabled = false;
+        btn.innerText = "تأكيد الحفظ في قاعدة البيانات";
+        
+        if (successCount > 0) {
+            refreshData();
+            setTimeout(() => {
+                document.getElementById('excel-preview-container').style.display = 'none';
+                excelData = [];
+            }, 3000);
+        }
+    };
 
     // Custom Icon Colors Logic
     function createCustomIcon(color) {
@@ -627,7 +781,98 @@
                 renderMapMarkers();
             }, 200);
         }
+
+        if (section === 'flagged') {
+            renderFlaggedSection();
+            if (flaggedMap) {
+                setTimeout(() => flaggedMap.invalidateSize(), 200);
+            }
+        }
+
         if(window.innerWidth <= 992) window.closeAll();
+    };
+
+    let flaggedMap;
+    let flaggedMarkersLayer = L.layerGroup();
+
+    window.renderFlaggedSection = () => {
+        const table = document.getElementById('flagged-table');
+        table.innerHTML = "";
+        
+        if (!flaggedMap) {
+            flaggedMap = L.map('flagged-map').setView([26.8, 30.8], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(flaggedMap);
+            flaggedMarkersLayer.addTo(flaggedMap);
+        } else {
+            setTimeout(() => flaggedMap.invalidateSize(), 200);
+        }
+
+        flaggedMarkersLayer.clearLayers();
+
+        const flaggedFacs = allFacilities.filter(f => f.flag === true);
+        flaggedFacs.forEach((f, index) => {
+            const creator = allUsers.find(u => u.facility === f.facilityName && u.governorate === f.governorate) 
+                            || {fullName: 'غير معروف', nationalID: '-', phoneNumber: '-'};
+
+            table.innerHTML += `<tr>
+                <td>${index + 1}</td>
+                <td><b>${f.facilityName}</b></td>
+                <td>${f.governorate}</td>
+                <td>${creator.fullName}</td>
+                <td>${creator.phoneNumber}</td>
+                <td><small>${f.lat.toFixed(4)}, ${f.lng.toFixed(4)}</small></td>
+                <td>
+                    <button class="btn-primary" style="background:var(--accent); margin-bottom:5px;" onclick="zoomToFlagged(${f.lat}, ${f.lng})">
+                        <i class="material-icons" style="font-size:16px">visibility</i> معاينة
+                    </button>
+                    <button class="btn-add" style="background:var(--success); margin-bottom:5px;" onclick="openEditFlaggedModal('${f.id}')">
+                        <i class="material-icons" style="font-size:16px">edit</i> مراجعة واعتماد
+                    </button>
+                    <button class="btn-delete" style="padding: 5px 10px; background: var(--danger); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="deleteRecord('FacilitiesReference', '${f.id}')">
+                        حذف
+                    </button>
+                </td>
+            </tr>`;
+
+            L.marker([f.lat, f.lng]).addTo(flaggedMarkersLayer)
+                .bindPopup(`<b>${f.facilityName}</b><br>بواسطة: ${creator.fullName}`);
+        });
+    };
+
+    window.openEditFlaggedModal = (id) => {
+        const f = allFacilities.find(x => x.id === id);
+        if(!f) return;
+        document.getElementById('edit-flag-id').value = id;
+        document.getElementById('edit-flag-name').value = f.facilityName;
+        document.getElementById('edit-flag-lat').value = f.lat;
+        document.getElementById('edit-flag-lng').value = f.lng;
+        openModal('edit-flagged-modal');
+    };
+
+    window.approveFlagged = async () => {
+        const id = document.getElementById('edit-flag-id').value;
+        const name = document.getElementById('edit-flag-name').value;
+        const lat = parseFloat(document.getElementById('edit-flag-lat').value);
+        const lng = parseFloat(document.getElementById('edit-flag-lng').value);
+
+        if(!name || isNaN(lat)) return alert("يرجى إكمال البيانات");
+
+        try {
+            await updateDoc(doc(db, "FacilitiesReference", id), {
+                facilityName: name,
+                lat: lat,
+                lng: lng,
+                flag: false, // Mark as approved
+                approvedAt: serverTimestamp()
+            });
+            alert("تم اعتماد المنشأة بنجاح!");
+            closeModal();
+            refreshData();
+        } catch (e) { alert("خطأ: " + e.message); }
+    };
+
+    window.zoomToFlagged = (lat, lng) => {
+        if (flaggedMap) flaggedMap.setView([lat, lng], 16);
     };
 
     // --- Core Logic ---
@@ -705,6 +950,12 @@
             renderFacilitiesTable(filteredAtt);
             renderMapMarkers();
 
+            // Also refresh flagged section if visible
+            const flaggedSec = document.getElementById('sec-flagged');
+            if (flaggedSec && flaggedSec.style.display !== 'none') {
+                renderFlaggedSection();
+            }
+
         } catch (err) {
             console.error("Data Fetch Error:", err);
             alert("حدث خطأ أثناء تحديث البيانات.");
@@ -731,8 +982,19 @@
                 <td><b>${log.fullName || 'غير معروف'}</b><br><small>${log.nationalID || '-'}</small></td>
                 <td>${log.facility || '-'}</td>
                 <td>${shiftLabel}</td>
-                <td>${loginDate.toLocaleString('ar-EG')}</td>
-                <td>${logoutDate ? logoutDate.toLocaleTimeString('ar-EG') : '<span class="badge badge-success">متواجد حالياً</span>'}</td>
+                <td>${loginDate.toLocaleString('ar-EG')}<br>
+                    <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${log.loginPhoto}')">
+                        <img src="${log.loginPhoto}" style="width:50px; height:50px; border-radius:5px; border:1px solid #ddd; object-fit:cover;">
+                        <br><small style="color:var(--primary); text-decoration:underline;">تكبير</small>
+                    </div>
+                </td>
+                <td>${logoutDate ? logoutDate.toLocaleString('ar-EG') : '<span class="badge badge-success">متواجد حالياً</span>'}<br>
+                    ${log.logoutPhoto ? `
+                    <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${log.logoutPhoto}')">
+                        <img src="${log.logoutPhoto}" style="width:50px; height:50px; border-radius:5px; border:1px solid #ddd; object-fit:cover;">
+                        <br><small style="color:var(--danger); text-decoration:underline;">تكبير</small>
+                    </div>` : ''}
+                </td>
                 <td>${log.workDuration || '-'}</td>
                 <td><button class="btn-delete" style="padding: 5px 10px; background: var(--danger); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="deleteRecord('AttendanceLogs', '${log.id}')">حذف</button></td>
             </tr>`;
@@ -939,6 +1201,12 @@ function renderFacilitiesTable(filteredData) {
         refreshData();
     };
 
+    window.showImageModal = (base64) => {
+        const img = document.getElementById('modal-img-display');
+        img.src = base64;
+        openModal('image-modal');
+    };
+
     window.openModal = (id) => {
         document.getElementById(id).style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
@@ -961,91 +1229,6 @@ function renderFacilitiesTable(filteredData) {
         const dateStamp = new Date().toISOString().split('T')[0];
         XLSX.writeFile(wb, `UHIA_${filenamePrefix}_${dateStamp}.xlsx`);
     };
-    let flaggedMap;
-
-// We extend the existing navTo to handle the flagged section specifically
-const originalNavTo = window.navTo;
-window.navTo = (section, event) => {
-    // Hide the stats header if we aren't on the attendance page
-    const header = document.getElementById('first-page-header');
-    header.style.display = (section === 'attendance') ? 'block' : 'none';
-
-    // Refresh flagged data if this section is chosen
-    if (section === 'flagged') {
-        renderFlaggedSection();
-             if (flaggedMap) {
-            setTimeout(() => {
-                flaggedMap.invalidateSize();
-            }, 200); // Small delay to ensure the CSS display change has finished
-        }
-    }
-    if (typeof originalNavTo === "function") {
-        originalNavTo(section, event);
-    }
-
-};
-
-function renderFlaggedSection() {
-    const table = document.getElementById('flagged-table');
-    table.innerHTML = "";
-    
-    // Initialize Map if it doesn't exist yet
-    if (!flaggedMap) {
-        flaggedMap = L.map('flagged-map').setView([26.8, 30.8], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(flaggedMap);
-    } else {
-        // Force map to recalculate size in case container was hidden
-        setTimeout(() => flaggedMap.invalidateSize(), 200);
-    }
-
-    // Filter only facilities where flag is 1
-    const flaggedFacs = allFacilities.filter(f => f.flag === true);
-    
-    flaggedFacs.forEach((f, index) => {
-        // Find the user associated with this facility and governorate
-        const creator = allUsers.find(u => u.facility === f.facilityName && u.governorate === f.governorate) 
-                        || {fullName: 'غير معروف', nationalID: '-'};
-
-        table.innerHTML += `<tr>
-            <td>${index + 1}</td>
-            <td><b>${f.facilityName}</b></td>
-            <td>${f.governorate}</td>
-            <td>${creator.fullName}</td>
-            <td>${creator.nationalID}</td>
-            <td>
-                <button class="btn-primary" style="background:var(--accent)" onclick="zoomToFlagged(${f.lat}, ${f.lng})">
-                    <i class="material-icons" style="font-size:16px">visibility</i> معاينة
-                </button>
-                <button class="btn-delete" style="padding: 5px 10px; background: var(--danger); color:white; border:none; border-radius:5px; cursor:pointer;" onclick="deleteRecord('FacilitiesReference', '${f.id}')">
-                    حذف
-                </button>
-            </td>
-        </tr>`;
-
-        // Add pins to the flagged map
-        L.marker([f.lat, f.lng]).addTo(flaggedMap)
-            .bindPopup(`<b>${f.facilityName}</b><br>بواسطة: ${creator.fullName}`);
-    });
-}
-
-// Global function to zoom into the specific facility on the flagged map
-window.zoomToFlagged = (lat, lng) => {
-    if (flaggedMap) {
-        flaggedMap.setView([lat, lng], 16);
-    }
-};
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 
 </body>
