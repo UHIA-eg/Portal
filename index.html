@@ -210,18 +210,20 @@
         <div id="reg-box" class="hidden">
             <h2>حساب جديد</h2>
             <input type="text" id="reg-name" placeholder="الاسم الرباعي" style="margin-bottom: 8px;">
-            <input type="text" id="reg-id" placeholder="الرقم القومي (14 رقم)" maxlength="14" style="margin-bottom: 8px;">
-            <input type="tel" id="reg-phone" placeholder="رقم الهاتف (11 رقم)" maxlength="11" style="margin-bottom: 8px;">
+            <input type="text" id="reg-id" inputmode="numeric" pattern="[0-9]{14}" placeholder="الرقم القومي (14 رقم)" maxlength="14" style="margin-bottom: 8px;">
+            <input type="tel" id="reg-phone" inputmode="numeric" pattern="[0-9]{11}" placeholder="رقم الهاتف (11 رقم)" maxlength="11" style="margin-bottom: 8px;">
             
-            <select id="reg-role" onchange="handleRoleChange(this.value)" style="margin-bottom: 8px; border: 2px solid var(--secondary);">
+            <select id="reg-role" onchange="handleRoleChange()" style="margin-bottom: 8px; border: 2px solid var(--secondary);">
                 <option value="user">أخصائي منفذ</option>
                 <option value="moshref">مشرف</option>
                 <option value="manager_users">مدير اداره المستفيدين</option>
                 <option value="manager_branch">مدير فرع</option>
+                <option value="manager_of_window">مدير اداره المنافذ </option>
+                <option value="manager_bms">رئيس الاداره المركزيه للمستفيدين</option>
             </select>
 
             <input type="email" id="reg-email" class="hidden" placeholder="البريد الإلكتروني (لإرسال التقارير)" style="margin-bottom: 8px;">
-
+<div id="gov-container">
             <select id="reg-gov" onchange="handleGovChange(this.value)" style="margin-bottom: 8px;">
                 <option value="">اختر المحافظة</option>
                 <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
@@ -234,7 +236,7 @@
                 <option>البحر الاحمر</option><option>الوادي الجديد</option><option>الاقصر</option>
                 <option>مطروح</option><option>بني سويف</option><option>القليوبيه</option>
             </select>
-
+</div>
             <div id="moshref-fields" class="hidden" style="margin-bottom: 8px;">
                 <div style="text-align: right; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; color: var(--primary);">
                     اختر المنشآت التابعة لك:
@@ -243,7 +245,7 @@
                     <span style="color: #94a3b8; font-size: 0.8rem;">اختر المحافظة أولاً...</span>
                 </div>
             </div>
-
+<div id="facilities-container">
             <div id="user-fac-fields">
                 <select id="reg-fac-select" onchange="toggleOtherInput(this.value)" style="margin-bottom: 8px;">
                     <option value="">اختر المنشأة الرئيسية</option>
@@ -257,7 +259,7 @@
                     <option value="صباحي">صباحي</option>
                     <option value="مسائي">مسائي</option>
                 </select>
-            </div>
+            </div></div>
 
             <input type="password" id="reg-pass" placeholder="كلمة المرور">
             
@@ -310,27 +312,6 @@
         document.getElementById('status').style.display = 'none';
     };
 
-    window.handleRoleChange = (role) => {
-        const moshrefDiv = document.getElementById('moshref-fields');
-        const userDiv = document.getElementById('user-fac-fields');
-        const emailInput = document.getElementById('reg-email');
-        const shiftDiv = document.getElementById('shift-fields');
-        
-        if (role === 'user') {
-            moshrefDiv.classList.add('hidden');
-            userDiv.classList.remove('hidden');
-            emailInput.classList.add('hidden');
-            shiftDiv.classList.remove('hidden'); // إظهار الوردية للأخصائي
-        } else {
-            moshrefDiv.classList.remove('hidden');
-            userDiv.classList.add('hidden');
-            emailInput.classList.remove('hidden');
-            shiftDiv.classList.add('hidden'); // إخفاء الوردية للمشرف والمدير
-        }
-        
-        const currentGov = document.getElementById('reg-gov').value;
-        if(currentGov) handleGovChange(currentGov);
-    };
 
     window.handleGovChange = (gov) => {
         const role = document.getElementById('reg-role').value;
@@ -409,15 +390,19 @@
         try {
             showStatus("جاري المعالجة...", "var(--warning)");
 
-            let userData = {
-                fullName: name, 
-                nationalID: id, 
-                phoneNumber: phone,
-                governorate: gov, 
-                password: pass,
-                role: role,
-                createdAt: new Date(),
-            };
+         let userData = {
+    fullName: name,
+    nationalID: id,
+    phoneNumber: phone,
+    password: pass,
+    role: role,
+    createdAt: new Date(),
+};
+
+// Add governorate only if NOT BMS
+if (role !== 'manager_bms') {
+    userData.governorate = gov;
+}
 
             if (role === 'user') {
                 if (!shift) return showStatus("يرجى اختيار الوردية للأخصائي", "var(--danger)");
@@ -466,7 +451,34 @@
                     });
                 }
             } 
-            else {
+            else if (
+                    role === 'manager_users' ||
+                    role === 'manager_branch' ||
+                    role === 'manager_of_window'
+                ) {
+
+                   
+                            if (!email) {
+                                return showStatus(
+                                    "يرجى إدخال البريد الإلكتروني",
+                                    "var(--danger)"
+                                );
+                            }
+
+                            userData.email = email;
+
+                            // Important
+                            // These managers automatically manage
+                           
+
+                            // Optional helper flag
+                            userData.scope = "governorate";
+
+                            // Managers monitor all shifts
+                            userData.shift = "all";
+                        
+                }
+            else if (role === 'moshref') { 
                 const checkboxes = document.querySelectorAll('input[name="moshref_facs"]:checked');
                 let selectedFacs = Array.from(checkboxes).map(cb => cb.value);
                 if (selectedFacs.length === 0) return showStatus("يرجى اختيار منشأة واحدة على الأقل", "var(--danger)");
@@ -476,6 +488,22 @@
                 userData.email = email;
                 userData.shift = "all"; // افتراضي للمشرفين لمتابعة كل الأوقات
             }
+            else if (role === 'manager_bms') {
+
+                                if (!email) {
+                                    return showStatus(
+                                        "يرجى إدخال البريد الإلكتروني",
+                                        "var(--danger)"
+                                    );
+                                }
+
+                                userData.email = email;
+
+                                // Read-only admin-like role
+                                userData.scope = "readonly_admin";
+
+                                userData.shift = "all";
+}
 
             // Create user account only if everything else succeeded
             await setDoc(doc(db, "UsersRegistry", id), userData);
@@ -486,7 +514,63 @@
             showStatus("خطأ: " + e.message, "var(--danger)"); 
         }
     };
+window.handleRoleChange = () => {
 
+    const role = document.getElementById('reg-role').value;
+
+    const govContainer =
+        document.getElementById('gov-container');
+
+    const facContainer =
+        document.getElementById('facilities-container');
+
+    const emailField =
+        document.getElementById('reg-email');
+
+    const moshrefFields =
+        document.getElementById('moshref-fields');
+
+    // Reset
+    govContainer.style.display = 'block';
+    facContainer.style.display = 'none';
+
+    emailField.classList.add('hidden');
+    moshrefFields.classList.add('hidden');
+
+    // User
+    if (role === 'user') {
+
+        facContainer.style.display = 'block';
+    }
+
+    // Supervisor
+    else if (role === 'moshref') {
+
+        facContainer.style.display = 'block';
+
+        emailField.classList.remove('hidden');
+
+        moshrefFields.classList.remove('hidden');
+    }
+
+    // Governorate managers
+    else if (
+        role === 'manager_users' ||
+        role === 'manager_branch' ||
+        role === 'manager_of_window'
+    ) {
+
+        emailField.classList.remove('hidden');
+    }
+
+    // Central admin
+    else if (role === 'manager_bms') {
+
+        govContainer.style.display = 'none';
+
+        emailField.classList.remove('hidden');
+    }
+};
     window.handleLogin = async () => {
         const id = document.getElementById('login-id').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
@@ -502,7 +586,23 @@
                     sessionStorage.setItem('userData', JSON.stringify(userData));
                     if (userData.role === 'admin') window.location.href = "admin.html";
                     else if (userData.role === 'user') window.location.href = "attendance.html";
-                    else window.location.href = "moshref_dashboard.html";
+                   else if (userData.role === 'moshref') {
+
+    window.location.href = "moshref_dashboard.html";
+
+} else if (
+    userData.role === 'manager_users' ||
+    userData.role === 'manager_branch' ||
+    userData.role === 'manager_of_window'
+) {
+
+    window.location.href = "moshref_dashboard.html";
+
+} else if (userData.role === 'manager_bms') {
+
+    window.location.href = "admin.html";
+    // window.location.href = "central_dashboard.html";
+}
                 } else {
                     showStatus("كلمة المرور غير صحيحة", "var(--danger)");
                 }

@@ -15,13 +15,65 @@
         body { font-family: 'Cairo', sans-serif; background-color: var(--admin-bg); margin: 0; display: flex; }
         
         /* Sidebar */
-        .sidebar { width: 260px; background: var(--primary); height: 100vh; color: white; position: fixed; right: 0; top: 0; padding: 20px; display: flex; flex-direction: column; z-index: 1001; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
         .sidebar h2 { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; font-size: 1.1rem; margin-top: 0; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; transition: 0.3s; border-radius: 12px; margin-bottom: 8px; font-size: 0.95rem; opacity: 0.8; }
         .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.15); opacity: 1; font-weight: 600; }
-        
-        .main-content { margin-right: 260px; width: calc(100% - 260px); padding: 30px; box-sizing: border-box; }
+        .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--white);
+    padding: 15px 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
 
+.digital-clock {
+    font-family: 'Cairo';
+    font-weight: 700;
+    color: var(--primary);
+    padding: 8px 15px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+}
+
+
+
+/* Sidebar - Hidden by default */
+.sidebar {
+    width: 250px;
+    background: var(--primary);
+    height: 100vh;
+    color: white;
+    position: fixed;
+    right: -250px; /* Hidden off-screen */
+    top: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 2000; /* Stays on top of everything */
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    visibility: hidden;
+}
+
+/* When 'active' class is added via JS */
+.sidebar.active {
+    right: 0;
+    visibility: visible;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+}
+
+/* Content: Always full width now */
+.main-content {
+    margin-right: 0 !important;
+    width: 100%;
+    transition: 0.3s;
+    padding: 20px;
+    max-width: 100%; /* Ensure it never exceeds screen width */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+ 
         /* Shift Switch */
         .shift-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; background: #e2e8f0; padding: 5px; border-radius: 50px; width: fit-content; margin-left: auto; margin-right: auto; }
         .btn-shift { padding: 10px 35px; border: none; background: transparent; color: #64748b; border-radius: 40px; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Cairo'; }
@@ -50,6 +102,9 @@
         .tag-guest { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
         .tag-out { background: #f1f5f9; color: #475569; }
 
+
+/* Sidebar behavior for Desktop (Optional: if you want it to toggle there too) */
+
         /* Enhanced Date Picker */
         .date-picker-bar { display: flex; gap: 15px; align-items: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .date-input-group { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 8px 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
@@ -64,7 +119,19 @@
 
         .facility-block { margin-bottom: 35px; }
         .facility-title { background: #eff6ff; color: var(--primary); padding: 10px 20px; border-radius: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-weight: 700; border-right: 4px solid var(--primary); }
-
+#map-view #moshref-map {
+    height: 500px !important; /* ضروري جداً */
+    width: 100%;
+    border-radius: 12px;
+    border: 2px solid #ddd;
+    z-index: 1; /* لضمان عدم تداخلها مع القوائم */
+}
+   @media (max-width: 992px) {
+            .sidebar { transform: translateX(100%); width: 260px; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-right: 0; width: 100%; padding: 15px; }
+            .mobile-header { display: flex; }
+        }
         /* Modal for Editing */
         #editModal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
         .modal-content { background: white; margin: 5% auto; padding: 25px; border-radius: 15px; width: 450px; max-width: 90%; }
@@ -86,18 +153,31 @@
 </div>
 
 <div class="main-content">
-    <div class="date-picker-bar" style="justify-content: center; margin-bottom: 15px;">
+ 
+<div class="top-bar">
+<div class="top-navbar" style="padding: 10px 20px; display: flex; align-items: center;">
+    <button onclick="toggleSidebar()" style="background: none; border: none; cursor: pointer; color: var(--primary);">
+    <i class="material-icons" style="font-size: 30px;">menu</i>
+</button>
+</div>
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem; color: var(--primary);">لوحة تحكم المشرف </h1>
+        <p style="margin:0; color: #64748b; font-size: 0.85rem;" id="live-date">تحميل التاريخ...</p>
+    </div>
+    <div class="digital-clock" id="digital-clock">00:00:00</div>
+</div>
+    <div id="sec-overview" class="section-view active">
+           <div class="date-picker-bar" style="justify-content: center; margin-bottom: 15px;">
         <div class="date-input-group">
             <i class="material-icons" style="font-size: 1.2rem; color: #64748b;">calendar_today</i>
-            <span>التاريخ:</span> <input type="date" id="global-date" onchange="processData()">
+            <span>التاريخ:</span> 
+             <input type="date" id="overview-date" onchange="processOverviewData()">
         </div>
         <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
-            <button id="shift-morning" class="btn-shift active" onclick="changeShift('صباحي')">الوردية الصباحية</button>
-            <button id="shift-night" class="btn-shift" onclick="changeShift('مسائي')">الوردية المسائية</button>
+             <button id="overview-shift-morning" class="btn-shift active" onclick="changeOverviewShift('صباحي')">الوردية الصباحية</button>
+            <button id="overview-shift-night" class="btn-shift" onclick="changeOverviewShift('مسائي')">الوردية المسائية</button>
         </div>
     </div>
-
-    <div id="sec-overview" class="section-view active">
         <div class="stats-grid" id="stats-summary"></div>
         <div class="data-container">
             <h3>مخطط التغطية الفعلية للوردية</h3>
@@ -108,7 +188,7 @@
                 <h3>ملخص حالة المنشآت (اليوم)</h3>
             </div>
             <table id="fac-summary-table">
-                <thead><tr><th>المنشأة</th><th>القوة المطلوبة</th><th>الحضور الفعلي</th><th>العجز/الزيادة</th></tr></thead>
+                <thead><tr><th>المنشأة</th><th>القوة المطلوبة</th><th>الحضور الفعلي (دخول+خروج) </th><th>العجز/الزيادة</th></tr></thead>
                 <tbody id="fac-table-body"></tbody>
             </table>
         </div>
@@ -118,13 +198,12 @@
         <div class="date-picker-bar">
             <div class="date-input-group">
                 <i class="material-icons" style="font-size: 1.2rem; color: #64748b;">calendar_today</i>
-                <span>من:</span> <input type="date" id="date-from">
+                <span>من:</span> <input type="date" id="date-from" onchange="generateTimeSeries()">
             </div>
             <div class="date-input-group">
                 <i class="material-icons" style="font-size: 1.2rem; color: #64748b;">event</i>
-                <span>إلى:</span> <input type="date" id="date-to">
+                <span>إلى:</span> <input type="date" id="date-to" onchange="generateTimeSeries()">
             </div>
-            <button class="btn-action" onclick="generateTimeSeries()"><i class="material-icons">analytics</i> عرض التحليل</button>
             <button class="btn-action" style="background:var(--success); margin-right: auto;" onclick="exportTimeSeriesExcel()"><i class="material-icons">download</i> تصدير Excel</button>
         </div>
         <div id="ts-summary-container" class="data-container">
@@ -135,16 +214,36 @@
     </div>
 
     <div id="sec-attendance" class="section-view">
+                <div class="date-picker-bar" style="justify-content: center; margin-bottom: 15px;">
+    <div class="date-input-group">
+    <i class="material-icons" style="font-size: 1.2rem; color: #64748b;">calendar_today</i>
+    <span>التاريخ:</span> 
+<input type="date" id="attendance-date" onchange="processAttendanceData()">
+    </div>
+    <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
+<button id="attendance-shift-morning" class="btn-shift active" onclick="changeAttendanceShift('صباحي')">الوردية الصباحية</button>
+    <button id="attendance-shift-night" class="btn-shift" onclick="changeAttendanceShift('مسائي')">الوردية المسائية</button>
+    </div>
+    </div>
         <div class="data-container">
             <div class="table-header">
-                <h3>تقرير الحضور والغياب التفصيلي</h3>
-                <span id="current-shift-label" class="tag tag-present" style="font-size: 0.9rem; padding: 8px 20px;"></span>
             </div>
             <div id="facility-detail-area"></div>
         </div>
     </div>
 
     <div id="sec-map-view" class="section-view">
+        <div class="date-picker-bar" style="justify-content: center; margin-bottom: 15px;">
+    <div class="date-input-group">
+    <i class="material-icons" style="font-size: 1.2rem; color: #64748b;">calendar_today</i>
+    <span>التاريخ:</span> 
+<input type="date" id="map-date" onchange="processMapData()">
+    </div>
+    <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
+    <button id="map-shift-morning" class="btn-shift active" onclick="changeMapShift('صباحي')">الوردية الصباحية</button>
+    <button id="map-shift-night" class="btn-shift" onclick="changeMapShift('مسائي')">الوردية المسائية</button>
+    </div>
+    </div>
         <div class="data-container">
             <div class="table-header">
                 <h3>الخريطة التفاعلية للمنشآت التابعة لك</h3>
@@ -159,8 +258,73 @@
 
     <div id="sec-staff" class="section-view">
         <div class="data-container">
-            <div class="table-header"><h3>قاعدة بيانات الموظفين المسجلين</h3></div>
+       <div class="table-header">
+
+    <h3>قاعدة بيانات الموظفين المسجلين</h3>
+
+    <button class="btn-action" onclick="openAddModal()">
+        <i class="material-icons">person_add</i>
+        إضافة موظف
+    </button>
+
+</div>
+
+<div id="addModal"
+     style="display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+
+    <div class="modal-content">
+
+        <h3>إضافة موظف جديد</h3>
+
+        <div class="form-group">
+            <label>الاسم الكامل</label>
+            <input type="text" id="add-name">
+        </div>
+
+        <div class="form-group">
+            <label>الرقم القومي</label>
+            <input type="text" id="add-nationalid">
+        </div>
+
+        <div class="form-group">
+            <label>رقم الهاتف</label>
+            <input type="text" id="add-phone">
+        </div>
+
+        <div class="form-group">
+            <label>المنشأة</label>
+            <select id="add-facility"></select>
+        </div>
+
+        <div class="form-group">
+            <label>الوردية</label>
+            <select id="add-shift">
+                <option value="صباحي">صباحي</option>
+                <option value="مسائي">مسائي</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px;">
+
+            <button class="btn-action"
+                    style="flex:1;"
+                    onclick="addNewUser()">
+                حفظ
+            </button>
+
+            <button class="btn-action"
+                    style="background:#64748b; flex:1;"
+                    onclick="closeAddModal()">
+                إلغاء
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
             <table id="staff-list-table">
+
                 <thead><tr><th>الاسم</th><th>المنشأة</th><th>الوردية</th><th>الهاتف</th><th>إجراءات</th></tr></thead>
                 <tbody id="staff-list-body"></tbody>
             </table>
@@ -205,8 +369,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     const firebaseConfig = {
         apiKey: "AIzaSyDgiNw5Dt6EkiokRjznzGkfZvVuDN0APPk",
         authDomain: "uhia-attendancesystem.firebaseapp.com",
@@ -221,7 +384,9 @@
     const userData = JSON.parse(sessionStorage.getItem('userData'));
     const myFacs = userData?.assignedFacilities || [];
     const myGov = userData?.governorate;
-    let currentShift = 'صباحي';
+    let overviewShift = 'صباحي';
+let attendanceShift = 'صباحي';
+let mapShift = 'صباحي';
     let globalUsers = [];
     let globalLogs = [];
     let facilityRefData = []; 
@@ -239,98 +404,337 @@
             shadowSize: [41, 41]
         });
     }
+let timeSeriesChart = null;
 
-    window.onload = async () => {
-        if (!userData) { window.location.href = "index.html"; return; }
-        document.getElementById('moshref-name').innerText = userData.fullName;
+// This makes the function global so the HTML button can "see" it
+    window.updateClock = function() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-GB');
+        const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('global-date').value = today;
-        const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        document.getElementById('date-from').value = lastWeek;
-        document.getElementById('date-to').value = today;
+        const clockEl = document.getElementById('digital-clock');
+        const dateEl = document.getElementById('live-date');
+        
+        if(clockEl) clockEl.innerText = timeStr;
+        if(dateEl) dateEl.innerText = dateStr;
+    }
+    setInterval(updateClock, 1000);
+window.toggleSidebar = () => {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('active');
+};
+setInterval(updateClock, 1000);
 
-        initMap();
+// Also add this to close the sidebar if the user clicks the "Overlay" or a link
+document.addEventListener('click', (e) => {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.querySelector('.top-navbar button');
+    
+    // If clicking outside the sidebar and NOT on the toggle button
+    if (sidebar.classList.contains('active') && 
+        !sidebar.contains(e.target) && 
+        !toggleBtn.contains(e.target)) {
+        sidebar.classList.remove('active');
+    }
+});
 
-        const facSnap = await getDocs(collection(db, "FacilitiesReference"));
-        facilityRefData = facSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-        const govSel = document.getElementById('edit-gov');
-        const uniqueGovs = [...new Set(facilityRefData.map(f => f.governorate))].sort();
-        uniqueGovs.forEach(g => govSel.add(new Option(g, g)));
-
-        await fetchData();
+    window.closeAll = () => {
+        document.getElementById('sidebar').classList.remove('active');
+        window.closeModal();
     };
 
-    function initMap() {
-        if(moshrefMap) return;
-        moshrefMap = L.map('moshref-map').setView([26.8206, 30.8025], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(moshrefMap);
-        markersLayer.addTo(moshrefMap);
-    }
+// 2. UNIFIED window.onload (Combine everything here)
+window.onload = async () => {
+    // Auth Check
+    if (!userData) { window.location.href = "index.html"; return; }
+    
+    // UI Initial Setup
+    document.getElementById('moshref-name').innerText = userData.fullName;
+    const today = new Date().toISOString().split('T')[0];
+// Overview
+const overviewDate = document.getElementById('overview-date');
+if (overviewDate) overviewDate.value = today;
+
+// Attendance
+const attendanceDate = document.getElementById('attendance-date');
+if (attendanceDate) attendanceDate.value = today;
+
+
+const dateFrom = document.getElementById('date-from');
+const dateTo = document.getElementById('date-to');
+
+if (dateFrom) dateFrom.value = today;
+if (dateTo) dateTo.value = today;
+// Map
+const mapDate = document.getElementById('map-date');
+if (mapDate) mapDate.value = today;    
+    // Start Clock
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Initialize Map
+    initMap();
+
+    // Fetch Data from Firebase
+    const facSnap = await getDocs(collection(db, "FacilitiesReference"));
+    facilityRefData = facSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    await fetchData(); 
+    generateTimeSeries(); 
+};
+
+
+
+function initMap() {
+    const mapContainer = document.getElementById('moshref-map');
+    
+    // فحص: إذا لم يجد العنصر أو إذا كانت الخريطة منشأة بالفعل، اخرج من الدالة
+    if (!mapContainer || moshrefMap) return;
+
+    moshrefMap = L.map('moshref-map').setView([27.0, 30.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(moshrefMap);
+    
+    markersLayer.addTo(moshrefMap);
+    console.log("Map initialized successfully");
+}
+
+function updateMapMarkers() {
+    // 3. مسح النقاط القديمة من الطبقة فقط (بدون مسح الخريطة نفسها)
+    markersLayer.clearLayers(); 
+
+    globalLogs.forEach(log => {
+        if (log.lat && log.lng) {
+            const marker = L.marker([log.lat, log.lng]);
+            marker.bindPopup(`<b>${log.userName}</b><br>${log.facility}`);
+            markersLayer.addLayer(marker); // إضافة للنظام الطبقي
+        }
+    });
+}
 
     function renderMoshrefMapMarkers(shiftLogs) {
         markersLayer.clearLayers();
         
         facilityRefData.filter(f => myFacs.includes(f.facilityName) && f.governorate === myGov).forEach(f => {
             if(f.lat && f.lng) {
-                const hasLogin = shiftLogs.some(log => log.facility === f.facilityName && log.governorate === f.governorate);
-                const markerColor = hasLogin ? 'green' : 'red';
-                const statusText = hasLogin ? '<span style="color:green">متاح (حضور نشط)</span>' : '<span style="color:red">غير متاح (لا يوجد حضور)</span>';
-
+                // const hasLogin = shiftLogs.some(log => log.facility === f.facilityName && log.governorate === f.governorate);
+                const activePeople = shiftLogs.filter(log =>log.facility === f.facilityName &&!log.logoutTime && log.governorate === f.governorate);
+                // const markerColor = hasLogin ? 'green' : 'red';
+                const markerColor = activePeople.length > 0 ? 'green' : 'red';
+                const statusText = activePeople.length > 0
+    ? '<span style="color:green">متاح (يوجد حضور حالياً)</span>'
+    : '<span style="color:red">غير متاح (لا يوجد حضور)</span>';
                 L.marker([f.lat, f.lng], { icon: createCustomIcon(markerColor) })
-                    .bindPopup(`<b>${f.facilityName}</b><br>${f.governorate}<br>${statusText}`)
+                .bindPopup(`
+    <div style="font-family:Cairo">
+        <b>${f.facilityName}</b><br>
+        ${f.governorate}<br><br>
+
+        ${activePeople.length > 0
+            ? `
+                <div style="color:green;font-weight:bold">
+                    الموجودين حالياً:
+                </div>
+
+                <ul style="padding-right:18px">
+                    ${activePeople.map(p => `
+                        <li>
+                            ${p.fullName}
+                        </li>
+                    `).join('')}
+                </ul>
+            `
+            : `
+                <span style="color:red">
+                    لا يوجد حضور حالياً
+                </span>
+            `
+        }
+    </div>
+`)
                     .addTo(markersLayer);
             }
         });
     }
 
-    async function fetchData() {
-        const uSnap = await getDocs(collection(db, "UsersRegistry"));
-        globalUsers = uSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const lSnap = await getDocs(collection(db, "AttendanceLogs"));
-        globalLogs = lSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        processData();
-    }
+   async function fetchData() { // Add 'async' here
+    const uSnap = await getDocs(collection(db, "UsersRegistry"));
+    globalUsers = uSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const lSnap = await getDocs(collection(db, "AttendanceLogs"));
+    globalLogs = lSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  window.processOverviewData();
+window.processAttendanceData();
+window.processMapData();
+window.renderStaffTab();
+}
 
-    window.changeShift = (shift) => {
-        currentShift = shift;
-        document.getElementById('shift-morning').classList.toggle('active', shift === 'صباحي');
-        document.getElementById('shift-night').classList.toggle('active', shift === 'مسائي');
-        const label = document.getElementById('current-shift-label');
-        if(label) label.innerText = "عرض بيانات الوردية الـ" + shift;
-        processData();
-    };
 
-    function processData() {
-        const selectedDateStr = new Date(document.getElementById('global-date').value).toDateString();
-        const filteredLogs = globalLogs.filter(l => l.loginTime?.toDate().toDateString() === selectedDateStr);
-        
-        const shiftWorkforce = globalUsers.filter(u => myFacs.includes(u.facility) && u.governorate === myGov && u.shift === currentShift && u.role !== 'moshref');
-        const shiftStaffIDs = shiftWorkforce.map(u => u.nationalID);
-        const shiftLogs = filteredLogs.filter(l => myFacs.includes(l.facility) && l.governorate === myGov && l.shift === currentShift);
+// ================= OVERVIEW =================
+window.changeOverviewShift = (shift) => {
+    overviewShift = shift;
 
-        const activeUsers = shiftLogs.filter(l => shiftStaffIDs.includes(l.nationalID) && !l.logoutTime);
-        const logoutUsers = shiftLogs.filter(l => shiftStaffIDs.includes(l.nationalID) && l.logoutTime);
-        const activeGuests = shiftLogs.filter(l => !shiftStaffIDs.includes(l.nationalID) && !l.logoutTime);
-        const logoutGuests = shiftLogs.filter(l => !shiftStaffIDs.includes(l.nationalID) && l.logoutTime);
+    document.getElementById('overview-shift-morning')
+        ?.classList.toggle('active', shift === 'صباحي');
 
-        renderCards(shiftWorkforce.length, activeUsers.length, logoutUsers.length, activeGuests.length, logoutGuests.length);
-        renderOverviewTable(shiftWorkforce, shiftLogs);
-        renderFacilityDetails(shiftWorkforce, shiftLogs);
-        renderStaffTab();
-        updateChart(shiftWorkforce, shiftLogs);
-        renderMoshrefMapMarkers(shiftLogs);
-    }
+    document.getElementById('overview-shift-night')
+        ?.classList.toggle('active', shift === 'مسائي');
+
+    processOverviewData();
+};
+
+// ================= ATTENDANCE =================
+window.changeAttendanceShift = (shift) => {
+    attendanceShift = shift;
+
+    document.getElementById('attendance-shift-morning')
+        ?.classList.toggle('active', shift === 'صباحي');
+
+    document.getElementById('attendance-shift-night')
+        ?.classList.toggle('active', shift === 'مسائي');
+
+    processAttendanceData();
+};
+
+// ================= MAP =================
+window.changeMapShift = (shift) => {
+    mapShift = shift;
+
+    document.getElementById('map-shift-morning')
+        ?.classList.toggle('active', shift === 'صباحي');
+
+    document.getElementById('map-shift-night')
+        ?.classList.toggle('active', shift === 'مسائي');
+
+    window.processMapData();
+};
+
+   window.processOverviewData = function() {
+    const selectedDateStr = new Date(
+        document.getElementById('overview-date').value
+    ).toDateString();
+
+    const filteredLogs = globalLogs.filter(
+        l => l.loginTime?.toDate().toDateString() === selectedDateStr
+    );
+
+    const shiftWorkforce = globalUsers.filter(
+        u =>
+            myFacs.includes(u.facility) &&
+            u.governorate === myGov &&
+            u.shift === overviewShift &&
+            u.role !== 'moshref'
+    );
+
+    const shiftStaffIDs = shiftWorkforce.map(u => u.nationalID);
+
+    const shiftLogs = filteredLogs.filter(
+        l =>
+            myFacs.includes(l.facility) &&
+            l.governorate === myGov &&
+            l.shift === overviewShift
+    );
+
+    const activeUsers = shiftLogs.filter(
+        l => shiftStaffIDs.includes(l.nationalID) && !l.logoutTime
+    );
+
+    const logoutUsers = shiftLogs.filter(
+        l => shiftStaffIDs.includes(l.nationalID) && l.logoutTime
+    );
+
+    const activeGuests = shiftLogs.filter(
+        l => !shiftStaffIDs.includes(l.nationalID) && !l.logoutTime
+    );
+
+    const logoutGuests = shiftLogs.filter(
+        l => !shiftStaffIDs.includes(l.nationalID) && l.logoutTime
+    );
+
+    renderCards(
+        shiftWorkforce.length,
+        activeUsers.length,
+        logoutUsers.length,
+        activeGuests.length,
+        logoutGuests.length
+    );
+
+    renderOverviewTable(shiftWorkforce, shiftLogs);
+    updateChart(shiftWorkforce, shiftLogs);
+}
+window.processAttendanceData = function() {
+    const selectedDateStr = new Date(
+        document.getElementById('attendance-date').value
+    ).toDateString();
+
+    const filteredLogs = globalLogs.filter(
+        l => l.loginTime?.toDate().toDateString() === selectedDateStr
+    );
+
+    const shiftWorkforce = globalUsers.filter(
+        u =>
+            myFacs.includes(u.facility) &&
+            u.governorate === myGov &&
+            u.shift === attendanceShift &&
+            u.role !== 'moshref'
+    );
+
+    const shiftLogs = filteredLogs.filter(
+        l =>
+            myFacs.includes(l.facility) &&
+            l.governorate === myGov &&
+            l.shift === attendanceShift
+    );
+    console.log("ATTENDANCE SHIFT:", attendanceShift);
+console.log("ATTENDANCE LOGS:", shiftLogs);
+
+    renderFacilityDetails(shiftWorkforce, shiftLogs);
+}
+window.processMapData = function() {
+    const selectedDateStr = new Date(
+        document.getElementById('map-date').value
+    ).toDateString();
+
+    const filteredLogs = globalLogs.filter(
+        l => l.loginTime?.toDate().toDateString() === selectedDateStr
+    );
+
+    const shiftLogs = filteredLogs.filter(
+        l =>
+            myFacs.includes(l.facility) &&
+            l.governorate === myGov &&
+            l.shift === mapShift
+    );
+    console.log("MAP SHIFT:", mapShift);
+console.log("MAP LOGS:", shiftLogs);
+
+    renderMoshrefMapMarkers(shiftLogs);
+}
 
     function renderCards(total, uActive, uOut, gActive, gOut) {
-        document.getElementById('stats-summary').innerHTML = `
-            <div class="stat-card"><h4>القوة المطلوبة</h4><p>${total}</p></div>
-            <div class="stat-card" style="border-top-color: var(--success)"><h4>حضور (موظفين)</h4><p>${uActive}</p></div>
-            <div class="stat-card" style="border-top-color: var(--warning)"><h4>حضور (ضيوف)</h4><p>${gActive}</p></div>
-            <div class="stat-card" style="border-top-color: #64748b"><h4>إجمالي الانصراف</h4><p>${uOut + gOut}</p></div>
-        `;
-    }
+
+    // Total logged in including guests
+const totalLoggedIn = uActive + gActive + uOut + gOut;
+    // Total logged out including guests
+    const totalLoggedOut = uOut + gOut;
+
+    document.getElementById('stats-summary').innerHTML = `
+        <div class="stat-card">
+            <h4>القوة المطلوبة</h4>
+            <p>${total}</p>
+        </div>
+
+        <div class="stat-card" style="border-top-color: var(--success)">
+            <h4>إجمالي الدخول (موظفين + ضيوف)</h4>
+            <p>${totalLoggedIn}</p>
+        </div>
+
+        <div class="stat-card" style="border-top-color: #64748b">
+            <h4>إجمالي الخروج</h4>
+            <p>${totalLoggedOut}</p>
+        </div>
+    `;
+}
 
     function renderOverviewTable(shiftWorkforce, shiftLogs) {
         document.getElementById('fac-table-body').innerHTML = myFacs.map(f => {
@@ -377,10 +781,10 @@
 
             guestLogs.forEach(g => {
                 const guestData = globalUsers.find(u => u.nationalID === g.nationalID);
-                const orig = guestData?.facility || 'منتدب خارجي';
+                const orig = guestData?.facility || 'اخصائي خارجي';
                 const phone = guestData?.phoneNumber || '-';
                 html += `<tr><td>${g.fullName}</td><td>${g.nationalID}</td><td>${phone}</td><td><span class="tag tag-guest">${orig}</span></td>
-                    <td><span class="tag tag-guest">${g.logoutTime ? 'انصرف' : 'حاضر (ضيف)'}</span></td>
+                    <td><span class="tag tag-guest">${g.logoutTime ? 'انصرف' : 'حاضر (اخصائي خارجي)'}</span></td>
                     <td>${g.loginTime.toDate().toLocaleTimeString('ar-EG')}
                         ${g.loginPhoto ? `<br>
                         <div style="margin-top:5px; cursor:pointer;" onclick="showImageModal('${g.loginPhoto}')">
@@ -401,37 +805,156 @@
         document.getElementById('facility-detail-area').innerHTML = html;
     }
 
-    window.generateTimeSeries = () => {
-        const fromDate = new Date(document.getElementById('date-from').value);
-        const toDate = new Date(document.getElementById('date-to').value);
-        toDate.setHours(23, 59, 59);
+  window.generateTimeSeries = async () => {
 
-        let summaryHtml = `<table><thead><tr><th>المنشأة</th><th>إجمالي المطلوب</th><th>حضور (صباحي)</th><th>حضور (مسائي)</th><th>إجمالي ضيوف</th><th>الصافي</th></tr></thead><tbody>`;
-        let detailsHtml = '';
+    const fromDateVal = document.getElementById('date-from').value;
+    const toDateVal = document.getElementById('date-to').value;
 
-        myFacs.forEach(fac => {
-            let facRows = '';
-            let facTotals = { req:0, morn:0, night:0, guest:0, diff:0 };
-            for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
-                const dayStr = d.toDateString();
-                const dayLogs = globalLogs.filter(l => l.facility === fac && l.governorate === myGov && l.loginTime?.toDate().toDateString() === dayStr);
-                const dayStaff = globalUsers.filter(u => u.facility === fac && u.governorate === myGov && u.role !== 'moshref');
-                const mReq = dayStaff.filter(u => u.shift === 'صباحي').length;
-                const nReq = dayStaff.filter(u => u.shift === 'مسائي').length;
-                const mPres = dayLogs.filter(l => l.shift === 'صباحي' && dayStaff.some(u => u.nationalID === l.nationalID)).length;
-                const nPres = dayLogs.filter(l => l.shift === 'مسائي' && dayStaff.some(u => u.nationalID === l.nationalID)).length;
-                const guests = dayLogs.filter(l => !dayStaff.some(u => u.nationalID === l.nationalID)).length;
-                const dailyDiff = (mPres + nPres + guests) - (mReq + nReq);
-                facRows += `<tr><td>${d.toLocaleDateString('ar-EG')}</td><td>${mReq}</td><td>${mPres}</td><td>${nReq}</td><td>${nPres}</td><td>${guests}</td><td style="font-weight:700; color:${dailyDiff<0?'var(--danger)':'var(--success)'}">${dailyDiff}</td></tr>`;
-                facTotals.req += (mReq + nReq); facTotals.morn += mPres; facTotals.night += nPres; facTotals.guest += guests; facTotals.diff += dailyDiff;
-            }
-            summaryHtml += `<tr><td>${fac}</td><td>${facTotals.req}</td><td>${facTotals.morn}</td><td>${facTotals.night}</td><td>${facTotals.guest}</td><td>${facTotals.diff}</td></tr>`;
-            detailsHtml += `<div class="data-container"><h3>تحليل منشأة: ${fac}</h3><table id="ts-table-${fac.replace(/\s/g,'_')}"><thead><tr><th>التاريخ</th><th>مطلوب(ص)</th><th>حاضر(ص)</th><th>مطلوب(م)</th><th>حاضر(م)</th><th>ضيوف</th><th>الصافي</th></tr></thead><tbody>${facRows}</tbody></table></div>`;
+    if (!fromDateVal || !toDateVal) return;
+
+    const startLimit = new Date(fromDateVal);
+    const endLimit = new Date(toDateVal);
+
+    startLimit.setHours(0, 0, 0, 0);
+    endLimit.setHours(23, 59, 59, 999);
+
+    const startTime = startLimit.getTime();
+    const endTime = endLimit.getTime();
+
+    if (timeSeriesChart) {
+        timeSeriesChart.destroy();
+    }
+
+    // ================= SUMMARY TABLE =================
+    let summaryHtml = `
+        <table>
+            <thead>
+                <tr>
+                    <th>المنشأة</th>
+                    <th>دخول صباحي</th>
+                    <th>خروج صباحي</th>
+                    <th>دخول مسائي</th>
+                    <th>خروج مسائي</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    let detailsHtml = '';
+
+    myFacs.forEach(fac => {
+
+        let facRows = '';
+
+        let facTotals = {
+            mornIn: 0,
+            mornOut: 0,
+            nightIn: 0,
+            nightOut: 0
+        };
+
+        // ================= FILTER ONCE (IMPORTANT FIX) =================
+      const filteredLogs = globalLogs.filter(l => {
+    if (!l.loginTime) return false;
+
+    let t;
+
+    // 🔥 FIX FIRESTORE TIMESTAMP SAFELY
+    if (typeof l.loginTime.toDate === 'function') {
+        t = l.loginTime.toDate().getTime();
+    } else {
+        t = new Date(l.loginTime).getTime();
+    }
+
+    return (
+        l.facility === fac &&
+        l.governorate === myGov &&
+        t >= startTime &&
+        t <= endTime
+    );
+});
+
+        // ================= GROUP BY DAY =================
+        const logsByDay = new Map();
+
+        filteredLogs.forEach(l => {
+            const d = new Date(l.loginTime);
+            d.setHours(0, 0, 0, 0);
+            const key = d.getTime();
+
+            if (!logsByDay.has(key)) logsByDay.set(key, []);
+            logsByDay.get(key).push(l);
         });
-        document.getElementById('ts-summary-table-area').innerHTML = summaryHtml + `</tbody></table>`;
-        document.getElementById('ts-details-container').innerHTML = detailsHtml;
-    };
 
+        // ================= BUILD DAILY ROWS =================
+        [...logsByDay.entries()]
+            .sort((a, b) => a[0] - b[0])
+            .forEach(([dayKey, dayLogs]) => {
+
+                // 🔥 SHIFT IS TAKEN DIRECTLY FROM DB (NO CALCULATION)
+
+                const mIn = dayLogs.filter(l => l.shift === 'صباحي').length;
+                const mOut = dayLogs.filter(l => l.shift === 'صباحي' && l.logoutTime).length;
+
+                const nIn = dayLogs.filter(l => l.shift === 'مسائي').length;
+                const nOut = dayLogs.filter(l => l.shift === 'مسائي' && l.logoutTime).length;
+
+                facTotals.mornIn += mIn;
+                facTotals.mornOut += mOut;
+                facTotals.nightIn += nIn;
+                facTotals.nightOut += nOut;
+
+                facRows += `
+                    <tr>
+                        <td>${new Date(Number(dayKey)).toLocaleDateString('ar-EG')}</td>
+                        <td>${mIn}</td>
+                        <td>${mOut}</td>
+                        <td>${nIn}</td>
+                        <td>${nOut}</td>
+                    </tr>
+                `;
+            });
+
+        // ================= SUMMARY ROW =================
+        summaryHtml += `
+            <tr>
+                <td>${fac}</td>
+                <td>${facTotals.mornIn}</td>
+                <td>${facTotals.mornOut}</td>
+                <td>${facTotals.nightIn}</td>
+                <td>${facTotals.nightOut}</td>
+            </tr>
+        `;
+
+        // ================= DETAILS TABLE =================
+        detailsHtml += `
+            <div class="data-container">
+                <h3>تحليل منشأة: ${fac}</h3>
+
+                <table id="ts-table-${fac.replace(/\s/g, '_')}">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>دخول صباحي</th>
+                            <th>خروج صباحي</th>
+                            <th>دخول مسائي</th>
+                            <th>خروج مسائي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${facRows}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    document.getElementById('ts-summary-table-area').innerHTML =
+        summaryHtml + `</tbody></table>`;
+
+    document.getElementById('ts-details-container').innerHTML =
+        detailsHtml;
+};
     window.exportTimeSeriesExcel = () => {
         const wb = XLSX.utils.book_new();
         const summaryTable = document.querySelector('#ts-summary-table-area table');
@@ -459,17 +982,39 @@
             </tr>`).join('');
     };
 
-    window.openEditModal = (id) => {
-        const u = globalUsers.find(x => x.id === id);
-        document.getElementById('edit-id').value = id;
-        document.getElementById('edit-name').value = u.fullName;
-        document.getElementById('edit-gov').value = u.government || "";
-        document.getElementById('edit-shift').value = u.shift;
-        document.getElementById('edit-phone').value = u.phoneNumber || "";
-        filterFacsByGov(u.government, u.facility);
-        document.getElementById('editModal').style.display = 'block';
-    };
+window.openEditModal = (id) => {
 
+    const u = globalUsers.find(x => x.id === id);
+
+    const govDropdown = document.getElementById('edit-gov');
+
+    // Fill governorates
+    const govs = [...new Set(
+        facilityRefData.map(f => f.governorate)
+    )];
+
+    govDropdown.innerHTML = govs.map(g =>
+        `<option value="${g}">${g}</option>`
+    ).join('');
+
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-name').value = u.fullName;
+
+    document.getElementById('edit-gov').value =
+        u.governorate || myGov;
+
+    document.getElementById('edit-shift').value = u.shift;
+
+    document.getElementById('edit-phone').value =
+        u.phoneNumber || "";
+
+    filterFacsByGov(
+        u.governorate || myGov,
+        u.facility
+    );
+
+    document.getElementById('editModal').style.display = 'block';
+};
     window.filterFacsByGov = (govName, selectedFac = "") => {
         const facDropdown = document.getElementById('edit-fac');
         facDropdown.innerHTML = "";
@@ -485,7 +1030,7 @@
         const id = document.getElementById('edit-id').value;
         const updateObj = {
             fullName: document.getElementById('edit-name').value,
-            government: document.getElementById('edit-gov').value,
+            governorate: document.getElementById('edit-gov').value,
             facility: document.getElementById('edit-fac').value,
             shift: document.getElementById('edit-shift').value,
             phoneNumber: document.getElementById('edit-phone').value
@@ -514,41 +1059,106 @@
 
     window.closeModal = () => document.getElementById('editModal').style.display = 'none';
 
-    function updateChart(shiftWorkforce, shiftLogs) {
-        const ctx = document.getElementById('attendanceChart').getContext('2d');
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: myFacs,
-                datasets: [
-                    { label: 'المطلوب', data: myFacs.map(f => shiftWorkforce.filter(u => u.facility === f).length), backgroundColor: '#e2e8f0' },
-                    { label: 'الحضور الفعلي', data: myFacs.map(f => shiftLogs.filter(l => l.facility === f && !l.logoutTime).length), backgroundColor: '#1e3a8a' }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
+function updateChart(shiftWorkforce, shiftLogs) {
+    const canvas = document.getElementById('attendanceChart'); // Ensure ID is correct
+    if (!canvas) return; 
+    const ctx = canvas.getContext('2d');
+
+    if (myChart) {
+        myChart.destroy(); // Prevents overlapping and zero-state freezes
+    }
+       
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: myFacs,
+            datasets: [
+                { 
+                    label: 'المطلوب', 
+                    data: myFacs.map(f => shiftWorkforce.filter(u => u.facility === f).length), 
+                    backgroundColor: '#e2e8f0' 
+                },
+                { 
+                    label: 'الحضور الفعلي (دخول+خروج) ', 
+                    data: myFacs.map(f => shiftLogs.filter(l => l.facility === f && !l.logoutTime).length), 
+                    backgroundColor: '#1e3a8a' 
+                }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+}
+window.showSec = (id) => {
+    // إخفاء كل الأقسام
+    document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    // إظهار القسم المطلوب
+    const targetSec = document.getElementById(`sec-${id}`);
+    const targetBtn = document.getElementById(`btn-${id}`);
+    
+    if (targetSec) targetSec.classList.add('active');
+    if (targetBtn) targetBtn.classList.add('active');
+
+    // الحل السحري: إذا كان القسم هو الخريطة، انتظر 200 مللي ثانية ثم حدث الحجم
+if (id === 'map-view') {
+        setTimeout(() => {
+            if (moshrefMap) {
+                moshrefMap.invalidateSize(); // Forces the map to fill the container
+            }
+        }, 200);
+    }
+    const topBar = document.querySelector('.top-bar');
+    if (topBar) {
+        // Hide the whole top bar if we are in the analysis view
+        topBar.style.display = (id === 'analysis') ? 'none' : 'flex';
+    }
+};
+
+window.openAddModal = () => {
+
+    const facSelect = document.getElementById('add-facility');
+
+    facSelect.innerHTML = myFacs.map(f =>
+        `<option value="${f}">${f}</option>`
+    ).join('');
+
+    document.getElementById('addModal').style.display = 'block';
+};
+
+window.closeAddModal = () => {
+    document.getElementById('addModal').style.display = 'none';
+};
+
+window.addNewUser = async () => {
+
+    const fullName = document.getElementById('add-name').value;
+    const nationalID = document.getElementById('add-nationalid').value;
+    const phoneNumber = document.getElementById('add-phone').value;
+    const facility = document.getElementById('add-facility').value;
+    const shift = document.getElementById('add-shift').value;
+
+    if (!fullName || !nationalID) {
+        alert("يرجى إدخال البيانات المطلوبة");
+        return;
     }
 
-    window.showSec = (id) => {
-        document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(`sec-${id}`).classList.add('active');
-        document.getElementById(`btn-${id}`).classList.add('active');
-        
-        if (id === 'map-view') {
-            setTimeout(() => {
-                moshrefMap.invalidateSize();
-            }, 200);
-        }
+    await addDoc(collection(db, "UsersRegistry"), {
+        fullName,
+        nationalID,
+        phoneNumber,
+        facility,
+        shift,
+        governorate: myGov,
+        role: "employee"
+    });
 
-        // التعديل هنا: إخفاء التبديل في صفحة التحليل وصفحة طاقم العمل
-        if (id === 'timeseries' || id === 'staff') {
-            document.querySelector('.date-picker-bar').style.display = 'none';
-        } else {
-            document.querySelector('.date-picker-bar').style.display = 'flex';
-        }
-    };
+    alert("تم إضافة الموظف بنجاح");
+
+    closeAddModal();
+
+    fetchData();
+};
 
     window.logout = () => { sessionStorage.clear(); window.location.href = "index.html"; };
 </script>

@@ -386,14 +386,64 @@
                 const uLng = pos.coords.longitude;
                 let fName = document.getElementById('edit-fac').value;
                 if (fName === 'other') fName = document.getElementById('new-fac-name').value.trim();
+               
 
-                const facID = `${document.getElementById('edit-gov').value}-${fName}`.replace(/\s+/g, '_');
-                const facSnap = await getDoc(doc(db, "FacilitiesReference", facID));
-                
-                if (facSnap.exists()) {
-                    const dist = calculateDistance(uLat, uLng, facSnap.data().lat, facSnap.data().lng);
-                    if (dist > 0.5) return showStatus(`بعيد عن الموقع (${(dist * 1000).toFixed(0)} متر). النطاق المسموح 500 متر.`, "var(--danger)");
-                }
+//                 const facID = `${document.getElementById('edit-gov').value}-${fName}`.trim();
+//                 const facSnap = await getDoc(doc(db, "FacilitiesReference", facID));
+//                 console.log("Facility ID:", facID);
+
+//                 if (facSnap.exists()) {
+//                     const dist = calculateDistance(uLat, uLng, facSnap.data().lat, facSnap.data().lng);
+//                     if (dist > 0.5) return showStatus(`بعيد عن الموقع (${(dist * 1000).toFixed(0)} متر). النطاق المسموح 500 متر.`, "var(--danger)");
+//                 }
+//                 else {
+//     // This stops the "Silent Pass" you are experiencing
+//     return showStatus("عذراً، هذه المنشأة غير مسجلة أو لا تتبع المحافظة المختارة.", "var(--danger)");
+// }
+const gov = document.getElementById('edit-gov').value.trim();
+
+const cleanFacilityName = fName.trim();
+
+console.log("Searching Facility:", cleanFacilityName);
+console.log("Governorate:", gov);
+
+const q = query(
+    collection(db, "FacilitiesReference"),
+    where("facilityName", "==", cleanFacilityName),
+    where("governorate", "==", gov)
+);
+
+const querySnap = await getDocs(q);
+
+console.log("Matches Found:", querySnap.size);
+
+if (!querySnap.empty) {
+
+    const facData = querySnap.docs[0].data();
+
+    console.log("Matched Facility:", facData);
+
+    const dist = calculateDistance(
+        uLat,
+        uLng,
+        facData.lat,
+        facData.lng
+    );
+
+    if (dist > 0.5) {
+        return showStatus(
+            `بعيد عن الموقع (${(dist * 1000).toFixed(0)} متر). النطاق المسموح 500 متر.`,
+            "var(--danger)"
+        );
+    }
+
+} else {
+
+    return showStatus(
+        "عذراً، هذه المنشأة غير مسجلة أو لا تتبع المحافظة المختارة.",
+        "var(--danger)"
+    );
+}
 
                 showStatus("جاري حفظ البيانات...", "var(--warning)");
 
