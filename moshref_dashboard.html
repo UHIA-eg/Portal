@@ -174,8 +174,8 @@
              <input type="date" id="overview-date" onchange="processOverviewData()">
         </div>
         <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
-             <button id="overview-shift-morning" class="btn-shift active" onclick="changeOverviewShift('صباحي')">الوردية الصباحية</button>
-            <button id="overview-shift-night" class="btn-shift" onclick="changeOverviewShift('مسائي')">الوردية المسائية</button>
+             <button id="overview-shift-morning" class="btn-shift active" onclick="changeOverviewShift('صباحي')">الفترة الصباحية</button>
+            <button id="overview-shift-night" class="btn-shift" onclick="changeOverviewShift('مسائي')">الفترة المسائية</button>
         </div>
     </div>
         <div class="stats-grid" id="stats-summary"></div>
@@ -207,7 +207,7 @@
             <button class="btn-action" style="background:var(--success); margin-right: auto;" onclick="exportTimeSeriesExcel()"><i class="material-icons">download</i> تصدير Excel</button>
         </div>
         <div id="ts-summary-container" class="data-container">
-            <h3>الملخص العام للفترة المختارة (شامل الورديتين)</h3>
+            <h3>الملخص العام للفترة المختارة (شامل الفترتين)</h3>
             <div id="ts-summary-table-area"></div>
         </div>
         <div id="ts-details-container"></div>
@@ -221,8 +221,8 @@
 <input type="date" id="attendance-date" onchange="processAttendanceData()">
     </div>
     <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
-<button id="attendance-shift-morning" class="btn-shift active" onclick="changeAttendanceShift('صباحي')">الوردية الصباحية</button>
-    <button id="attendance-shift-night" class="btn-shift" onclick="changeAttendanceShift('مسائي')">الوردية المسائية</button>
+<button id="attendance-shift-morning" class="btn-shift active" onclick="changeAttendanceShift('صباحي')">الفترة الصباحية</button>
+    <button id="attendance-shift-night" class="btn-shift" onclick="changeAttendanceShift('مسائي')">الفترة المسائية</button>
     </div>
     </div>
         <div class="data-container">
@@ -240,8 +240,8 @@
 <input type="date" id="map-date" onchange="processMapData()">
     </div>
     <div id="global-shift-container" class="shift-container" style="margin-bottom: 0;">
-    <button id="map-shift-morning" class="btn-shift active" onclick="changeMapShift('صباحي')">الوردية الصباحية</button>
-    <button id="map-shift-night" class="btn-shift" onclick="changeMapShift('مسائي')">الوردية المسائية</button>
+    <button id="map-shift-morning" class="btn-shift active" onclick="changeMapShift('صباحي')">الفترة الصباحية</button>
+    <button id="map-shift-night" class="btn-shift" onclick="changeMapShift('مسائي')">الفترة المسائية</button>
     </div>
     </div>
         <div class="data-container">
@@ -297,7 +297,7 @@
         </div>
 
         <div class="form-group">
-            <label>الوردية</label>
+            <label>الفترة</label>
             <select id="add-shift">
                 <option value="صباحي">صباحي</option>
                 <option value="مسائي">مسائي</option>
@@ -325,7 +325,7 @@
 
             <table id="staff-list-table">
 
-                <thead><tr><th>الاسم</th><th>المنشأة</th><th>الوردية</th><th>الهاتف</th><th>إجراءات</th></tr></thead>
+                <thead><tr><th>الاسم</th><th>المنشأة</th><th>الفترة</th><th>الهاتف</th><th>إجراءات</th></tr></thead>
                 <tbody id="staff-list-body"></tbody>
             </table>
         </div>
@@ -346,7 +346,7 @@
             <select id="edit-fac"></select>
         </div>
         <div class="form-group">
-            <label>الوردية</label>
+            <label>الفترة</label>
             <select id="edit-shift"><option value="صباحي">صباحي</option><option value="مسائي">مسائي</option></select>
         </div>
         <div class="form-group"><label>الهاتف</label><input type="text" id="edit-phone"></div>
@@ -725,7 +725,7 @@ const totalLoggedIn = uActive + gActive + uOut + gOut;
         </div>
 
         <div class="stat-card" style="border-top-color: var(--success)">
-            <h4>إجمالي الدخول (موظفين + ضيوف)</h4>
+            <h4>إجمالي الدخول (موظفين + اخصائي خارجي)</h4>
             <p>${totalLoggedIn}</p>
         </div>
 

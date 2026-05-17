@@ -211,7 +211,7 @@
     <div class="content-body">
         <div class="user-welcome">
             <h2 id="uName">جاري التحميل...</h2>
-            <div id="shift-display" class="shift-badge">جاري حساب الوردية...</div>
+            <div id="shift-display" class="shift-badge">جاري حساب الفترة...</div>
         </div>
 
         <div class="input-group">
@@ -504,7 +504,7 @@ if (!querySnap.empty) {
         }
 
         document.getElementById('uName').innerText = "مرحباً، " + userData.fullName;
-        document.getElementById('shift-display').innerText = "الوردية: " + calculateShift();
+        document.getElementById('shift-display').innerText = "الفترة: " + calculateShift();
 
         const govs = ["القاهرة", "الجيزة", "الإسكندرية", "بورسعيد", "السويس", "الإسماعيلية", "أسيوط", "سوهاج", "قنا", "الأقصر", "أسوان","البحيرة","الشرقية","الغربية","المنوفية","الدقهلية","الفيوم","المنيا","كفر الشيخ","شمال سيناء","جنوب سيناء","البحر الاحمر","الوادي الجديد","مطروح","بني سويف","القليوبيه","دمياط"];
         const gSelect = document.getElementById('edit-gov');

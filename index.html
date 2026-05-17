@@ -255,7 +255,7 @@
 
             <div id="shift-fields">
                 <select id="reg-shift" style="margin-bottom: 8px;">
-                    <option value="">اختر الوردية </option>
+                    <option value="">اختر الفترة </option>
                     <option value="صباحي">صباحي</option>
                     <option value="مسائي">مسائي</option>
                 </select>
@@ -405,7 +405,7 @@ if (role !== 'manager_bms') {
 }
 
             if (role === 'user') {
-                if (!shift) return showStatus("يرجى اختيار الوردية للأخصائي", "var(--danger)");
+                if (!shift) return showStatus("يرجى اختيار الفترة للأخصائي", "var(--danger)");
                 let facSelectValue = document.getElementById('reg-fac-select').value;
                 let facName = facSelectValue === 'other' ? document.getElementById('reg-fac-other').value.trim() : facSelectValue;
                 if (!facName) return showStatus("يرجى اختيار المنشأة", "var(--danger)");

@@ -269,7 +269,7 @@ document.addEventListener('click', (e) => {
 
     window.onload = async () => {
         let user = JSON.parse(sessionStorage.getItem('userData'));
-        if (!user || user.role !== 'admin') {
+        if (!user || user.role !== 'admin' && user.role !== 'manager_bms') {
             window.location.href = "index.html";
             return;
         }

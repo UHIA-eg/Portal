@@ -17,10 +17,8 @@
     <div class="nav-item active" onclick="navTo('attendance', event)"><i class="material-icons">analytics</i> سجلات الحضور اليومية</div>
     <div class="nav-item" onclick="navTo('users', event)"><i class="material-icons">badge</i> إدارة العاملين بالمنافذ</div>
     <div class="nav-item" onclick="navTo('facilities', event)"><i class="material-icons">location_city</i> إدارة المنافذ الصحيه</div>
-    <div class="nav-item" onclick="navTo('bulk-upload', event)"><i class="material-icons">upload_file</i> رفع ملف منشآت (Excel)</div>
     <div class="nav-item" onclick="navTo('map-view', event)"><i class="material-icons">map</i> الخريطة التفاعلية</div>
     <div class="nav-item" onclick="navTo('flagged', event)">
-    <i class="material-icons">fact_check</i> مراجعة طلبات الإضافة
 </div>
     <div class="nav-item" style="margin-top: auto; color: #fda4af;" onclick="logoutAdmin()">
         <i class="material-icons">power_settings_new</i> تسجيل الخروج
@@ -53,11 +51,11 @@
                 <input type="date" id="dash-date-end" onchange="refreshData()">
             </div>
             <div style="flex:1; min-width: 150px;">
-                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px;"><i class="material-icons" style="font-size:12px">schedule</i> تصفية حسب الفترة:</label>
+                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px;"><i class="material-icons" style="font-size:12px">schedule</i> تصفية حسب الوردية:</label>
                 <select id="dash-shift-filter" onchange="refreshData()">
                     <option value="all">كل الورديات (24 ساعة)</option>
-                    <option value="morning">الفترة الصباحية</option>
-                    <option value="night">الفترة المسائية</option>
+                    <option value="morning">الوردية الصباحية</option>
+                    <option value="night">الوردية المسائية</option>
                 </select>
             </div>
         </div>
@@ -173,7 +171,7 @@
                     <tr>
                         <th>الموظف</th>
                         <th>المنشأة</th>
-                        <th>الفترة المحتسبة</th>
+                        <th>الوردية المحتسبة</th>
                         <th>وقت الدخول</th>
                         <th>وقت الخروج</th>
                         <th>مدة العمل</th>
@@ -224,20 +222,7 @@
         </div>
     </div>
 
-    <div id="sec-bulk-upload" class="data-container" style="display:none;">
-        <div class="table-header-tools">
-            <h2>رفع منشآت صحية من ملف Excel</h2>
-        </div>
-        <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px dashed #cbd5e1; text-align: center;">
-            <i class="material-icons" style="font-size: 4rem; color: var(--primary); margin-bottom: 15px;">cloud_upload</i>
-            <p style="font-weight: bold; margin-bottom: 10px;">اختر ملف Excel يحتوي على الأعمدة التالية بالترتيب:</p>
-            <p style="color: #64748b; margin-bottom: 20px;">(المحافظة، اسم المنشأة، خط العرض Lat، خط الطول Long)</p>
-            <input type="file" id="excel-file-input" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
-            <button class="btn-add" style="margin: 0 auto; padding: 15px 30px;" onclick="document.getElementById('excel-file-input').click()">
-                <i class="material-icons">attach_file</i> اختيار الملف والرفع
-            </button>
-            <div id="upload-status" style="margin-top: 20px; font-weight: bold;"></div>
-        </div>
+    
         <div id="excel-preview-container" style="margin-top: 30px; display: none;">
             <h3>معاينة البيانات (سيتم إضافة هذه البيانات مباشرة)</h3>
             <div style="overflow-x: auto; max-height: 400px;">
@@ -333,44 +318,8 @@
 
 <div id="overlay" class="overlay" onclick="closeAll()"></div>
 
-<div id="fac-modal" class="modal">
-    <h3><i class="material-icons">domain</i> إضافة منشأة جديدة</h3>
-    <input type="text" id="m-fac-name" placeholder="اسم المنشأة">
-    <select id="m-fac-gov">
-        <option value="">اختر المحافظة</option>
-           <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
-                <option>بورسعيد</option><option>السويس</option><option>الإسماعيلية</option>
-                <option>البحيرة</option><option>دمياط</option><option>الشرقية</option>
-                <option>الغربية</option><option>المنوفية</option><option>الدقهلية</option>
-                <option>الفيوم</option><option>المنيا</option><option>أسيوط</option>
-                <option>سوهاج</option><option>قنا</option><option>أسوان</option>
-                <option>كفر الشيخ</option><option>شمال سيناء</option><option>جنوب سيناء</option>
-                <option>البحر الاحمر</option><option>الوادي الجديد</option><option>الاقصر</option>
-                <option>مطروح</option><option>بني سويف</option><option>القليوبيه</option>
-    </select>
-    <div style="display: flex; gap: 10px;">
-        <input type="number" id="m-fac-lat" step="any" placeholder="خط العرض Lat">
-        <input type="number" id="m-fac-lng" step="any" placeholder="خط الطول Lng">
-    </div>
-    <button class="btn-add" style="width:100%; margin-top:15px;" onclick="saveFacility()">حفظ البيانات</button>
-</div>
 
-<div id="edit-user-modal" class="modal">
-    <h3><i class="material-icons">edit</i> تعديل بيانات موظف</h3>
-    <input type="hidden" id="edit-u-id">
-    <label>الاسم الكامل</label>
-    <input type="text" id="edit-u-name">
-    <label>الرقم القومي</label>
-    <input type="text" id="edit-u-ni">
-    <label>كلمة المرور</label>
-    <input type="text" id="edit-u-pass">
-    <label>رقم الهاتف</label>
-    <input type="text" id="edit-u-phone">
-    <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn-add" style="flex:1" onclick="updateUser()">تحديث</button>
-        <button class="btn-add" style="flex:1; background:var(--danger)" onclick="closeModal()">إلغاء</button>
-    </div>
-</div>
+
 
 <div id="image-modal" class="modal" style="max-width: 600px;">
     <h3><i class="material-icons">image</i> صورة التحقق</h3>
